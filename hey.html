@@ -1,0 +1,7 @@
+(def html (let [mystr uri]
+    (cond
+          (re-find #"/" uri) (renderhtml "hey" "welcome.html")
+          (re-find #"/hello" uri) (renderhtml "hello" "hello.html")
+          (re-find #"/create_bath" uri) (renderhtml "hello" "form.html")
+          (re-find #"/action_create_bath" uri) (actioncreate "hello" "form.html" req)
+
