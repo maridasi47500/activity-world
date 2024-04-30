@@ -30,6 +30,11 @@
     :body (format (slurp (io/resource "index.html")) title (slurp (io/resource hey)))
     :contenttype "text/html"
     })
+(defn renderjs1 [title hey]
+  {:status 200
+    :body (slurp (io/resource hey))
+    :contenttype "text/javascript"
+    })
 (defn rendercss1 [title hey]
   {:status 200
     :body (slurp (io/resource hey))
@@ -226,6 +231,7 @@
     (cond
           (re-find #"^/$" uri) (renderhtml "Camp" "welcome.html")
           (re-find #"^/app.css$" uri) (rendercss1 "Camp" "app.css")
+          (re-find #"^/app.js$" uri) (rendercss1 "Camp" "app.js")
           (re-find #"^/hello$" uri) (renderhtml "Camp" "hello.html")
           (re-find #"^/reserver$" uri) (renderhtml "Reservation" "form.html")
           (re-find #"^/action_create_booking$" uri) (actioncreate "hello" "form.html" req)
