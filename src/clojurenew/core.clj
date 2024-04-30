@@ -46,11 +46,11 @@
 (defn output
   "execute query and return lazy sequence"
   []
-  (query db ["select * from bath"]))
+  (query db ["select * from booking"]))
 (defn getbyid
   "execute query and return lazy sequence"
   [myid]
-  (query db ["select * from bath where id = ?" myid]))
+  (query db ["select * from booking where id = ?" myid]))
 
 (defn voirbain [title template req myid]
   (println "action voirbain")
@@ -84,10 +84,11 @@
 (defn rendercollection [title bdd template req]
   (println "action create")
   (def mytemplate (slurp (io/resource template)))
-  (def figure (map #(format mytemplate  (get % :title "") (get % :body "") (get % :id "") (get % :url "") (get % :id "") (get % :id "")) (output)))
-  (def body (format (slurp (io/resource "bains.html")) (str/join "" figure)))
+  (def figure (map #(format mytemplate   (get % :nom "") (get % :prenom "") (get % :date "") (get % :email "") (get % :numero "") (if (= (get % :journee "") "1") "journée" "demi-journée") (get % :content "") (get % :date "") (get % :id "")) (output)))
+  (def body (format (slurp (io/resource "reservations.html")) (str/join "" figure)))
+  (def body1 (format (slurp (io/resource "reservations1.html")) "<p>il n'y a pas de réservations à afficher</p>"))
   (def title "hey")
-  (def hey (if (zero? (count (output))) "<p>il n'y a pas de bains à afficher</p>" body))
+  (def hey (if (zero? (count (output))) body1 body))
   (def reponsebody (format (slurp (io/resource "index.html")) title hey))
   {:status 200
     :body reponsebody
@@ -106,15 +107,15 @@
   (def myhash (keywordize-keys (form-decode a)))
   (println "hey HEY he")
   (println myhash)
-  (def id (get myhash :id ""))
+  (def id (get myhash :myid ""))
   (execute! db
-  ["delete from bath where id = ?"
+  ["delete from booking where id = ?"
     id])
   (println "OHOHOH")
   {:status 301
     :body (slurp (io/resource "redirect.html"))
     :contenttype "text/html"
-    :redirect "/voir_bains"
+    :redirect "/voir_reservations"
     })
 (defn actionupdate [title hey req]
   (println "action create")
@@ -133,7 +134,7 @@
   (def body (str/join "" (get myhash :body ["ur" "body"]) ))
   (def id (get myhash :id ""))
   (execute! db
-  ["update bath set title = ?, url = ?, body = ? where id = ?"
+  ["update booking set title = ?, url = ?, body = ? where id = ?"
    mytitle url body id])
   (println "OHOHOH")
   {:status 301
@@ -154,27 +155,35 @@
   (def myhash (keywordize-keys (form-decode a)))
   (println "hey HEY he")
   (println myhash)
-  (def mytestdata {:title (get myhash :title "hye")
-                   :url (get myhash :url "url")
-                   :body (str/join "" (get myhash :body ["ur" "body"])) })
-  (insert! db :bath mytestdata)
+  (def mytestdata {:nom (get myhash :nom "hye")
+                   :prenom (get myhash :prenom "url")
+                   :date (get myhash :date "url")
+                   :email (get myhash :email "url")
+                   :numero (get myhash :numero "url")
+                   :content (get myhash :content "url")
+                   :journee (get myhash :journee "url") })
+  (insert! db :booking mytestdata)
   (println "OHOHOH")
   {:status 301
     :body (slurp (io/resource "redirect.html"))
     :contenttype "text/html"
-    :redirect "/voir_bains"
+    :redirect "/voir_reservations"
     })
 
 (defn create-db
   "create db and table"
   []
   (try (db-do-commands db
-                       (create-table-ddl :bath
+                       (create-table-ddl :booking
                                          [[:id "integer primary key autoincrement" ]
                                           [:timestamp :datetime :default :current_timestamp ]
-                                          [:url :text]
-                                          [:title :text]
-                                          [:body :text]]))
+                                          [:prenom :text]
+                                          [:nom :text]
+                                          [:date :date]
+                                          [:numero :text]
+                                          [:email :text]
+                                          [:journee :text]
+                                          [:content :text]]))
        (catch Exception e
          (println (.getMessage e)))))
 
@@ -188,7 +197,7 @@
 (defn output
   "execute query and return lazy sequence"
   []
-  (query db ["select * from bath"]))
+  (query db ["select * from booking"]))
 
 
 
@@ -206,8 +215,8 @@
           (re-find #"^/$" uri) "welcome.html"
           (re-find #"^/$" uri) "welcome.html"
           (re-find #"^/hello$" uri) "hello.html"
-          (re-find #"^/create_bath$" uri) "uhiuh"
-          (re-find #"^/action_create_bath$" uri) "lk"
+          (re-find #"^/create_booking$" uri) "uhiuh"
+          (re-find #"^/action_create_booking$" uri) "lk"
           (re-find #"^/voir_bains$" uri) "lilu"
           (re-find #"^/voir_bain/\d+$" uri) "i"
           (re-find #"^/edit_bain/\d+$" uri) "i"
@@ -219,10 +228,10 @@
           (re-find #"^/app.css$" uri) (rendercss1 "Camp" "app.css")
           (re-find #"^/hello$" uri) (renderhtml "Camp" "hello.html")
           (re-find #"^/reserver$" uri) (renderhtml "Reservation" "form.html")
-          (re-find #"^/action_create_bath$" uri) (actioncreate "hello" "form.html" req)
-          (re-find #"^/action_update_bath$" uri) (actionupdate "hello" "formedit.html" req)
-          (re-find #"^/action_delete_bath$" uri) (actiondelete "hello"  req)
-          (re-find #"^/voir_bains$" uri) (rendercollection "hello" output "_bain.html" req)
+          (re-find #"^/action_create_booking$" uri) (actioncreate "hello" "form.html" req)
+          (re-find #"^/action_update_booking$" uri) (actionupdate "hello" "formedit.html" req)
+          (re-find #"^/deletebooking$" uri) (actiondelete "hello"  req)
+          (re-find #"^/voir_reservations$" uri) (rendercollection "hello" output "_reservation.html" req)
           (re-find #"^/voir_bain/\d+$" uri) (voirbain "hello" "voirbain.html" req (get (re-find #"^/voir_bain/(\d+)$" uri) 1))
           (re-find #"^/edit_bain/\d+$" uri) (editbain "hello" "formedit.html" req (get (re-find #"^/edit_bain/(\d+)$" uri) 1))
           :else (renderhtml "Erreur" "404.html"))))

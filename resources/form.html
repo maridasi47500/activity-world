@@ -1,6 +1,6 @@
 <section>
 <h2><a id="reserverboto">Réservation d'une journée ou une demi journée</a></h2>
-<form action="/action_create_bath" method="post">
+<form action="/action_create_booking" method="post">
 <div class="field">
 <label for="form_nom">
 nom
@@ -8,55 +8,48 @@ nom
 <input id="form_nom" name="nom" type="text"/>
 </div>
 <div class="field">
-<label for="myurl">
+<label for="form_prenom">
 prénom
 </label>
-<input id="myurl" name="url" type="text"/>
+<input id="form_prenom" name="prenom" type="text"/>
 </div>
 <div class="field">
-<label for="mytitle">
+<label for="form_numero">
 numero
 </label>
-<input id="mytitle" name="title" type="text"/>
+<input id="form_numero" name="numero" type="text"/>
 </div>
 <div class="field">
-<label for="mytitle">
+<label for="form_email">
 email
 </label>
-<input id="mytitle" name="title" type="text"/>
+<input id="form_email" name="email" type="email"/>
 </div>
 <div class="field">
-<label for="mybody">
-date
-</label>
-<textarea id="mybody" name="body">
-</textarea>
-</div>
-<div class="field">
-<label for="mybody">
-contenu de ma réservation
-</label>
-<textarea id="mybody" name="body">
-</textarea>
-</div>
-<div class="field">
-<label for="mybody">
+<label for="form_date">
 date de ma réservation
 </label>
-<input type="date" id="mybody" name="body"/>
+<input id="form_date" name="date" type="date"/>
 </div>
 <div class="field">
-<label for="mybody">
+<label for="form_content">
+contenu de ma réservation
+</label>
+<textarea id="form_content" name="content">
+</textarea>
+</div>
+<div class="field">
+<label for="form_journee">
 journee/demi - journee
 </label>
-<select required>
+<select required name="journee" id="form_journee">
 <option value="">
 selectionner journee ou demi journee
 </option>
 <option value="1">
 journee
 </option>
-<option value="2">
+<option value="demi">
 demi journee
 </option>
 </select>
