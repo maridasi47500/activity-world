@@ -1,6 +1,6 @@
 h2 a::before {
-	content: "\1F397";
-	transform: rotate(90deg) translate(0, 20px);
+	content: "\1F3CA";
+	transform: rotate(0deg) translate(-20px, 0);
 	display: inline-block;
 }
 h2 {
