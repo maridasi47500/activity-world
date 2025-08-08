@@ -29,6 +29,7 @@
    :headers {"Content-Type" "text/plain"}
    :body "renvoie toujours Hello World"})
 (defn ringhandler [request] (ring.util.response/response "Hello"))
+(defn secondringhandler [request codehtml] (ring.util.response/response codehtml))
 
  handler1 [request] (ring.util.response/bad-request "Hello"))
 
@@ -140,11 +141,7 @@
   (def title "hey")
   (def hey (if (zero? (count (output))) "<p>il n'y a pas de bain à afficher</p>" body))
   (def reponsebody (format (slurp (io/resource "index.html")) title hey))
-  {:status 200
-    :body reponsebody
-    :contenttype "text/html"
-    :redirect ""
-    })
+  (secondringhandler req reponsebody))
 (defn editbain [title template req myid]
   (println "action voirbain")
   (def mytemplate (slurp (io/resource template)))
