@@ -10,6 +10,8 @@
 brew install clojure
 apt install clojure1.6 --fix-missing
 lein run
+lein search ring-core
+lein search lein-ring
 ```
 
 # clojure1

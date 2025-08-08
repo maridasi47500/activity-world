@@ -18,6 +18,7 @@
 
 
 
+
 (def testdata
   { :url "http://example.com",
    :title "SQLite Example",
@@ -52,6 +53,35 @@
     (ring.util.response/content-type
         (ring.util.response/response (get params "input"))
         "text/plain")) ;response of a value fo a param in a url string 
+(ring.util.response/set-cookie 
+    (ring.util.response/response "Setting a cookie.") 
+    "session_id" 
+    "session-id-hash")
+(def wrap-cookies-app-handler
+  (-> ringhandler
+      wrap-cookies
+  ));wrap cookie in cookie string in answr
+(def store-session-app-handler
+  (-> your-handler
+      wrap-session
+  ))
+(def store-your-sesionapp-handler
+  (-> your-handler
+      wrap-cookies
+      (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
+      (wrap-session {:cookie-attrs {:max-age 3600}})
+
+  ))
+(defn compte-requests-handler [{session :session}];compte requete
+  (let [count   (:count session 0)
+        session (assoc session :count (inc count))]
+    (-> (response (str "You accessed this page " count " times."))
+        (assoc :session session))))
+
+(defn vide-session-handler [request]
+  (-> (response "Session deleted.")
+      (assoc :session nil)));empty session
+
 (def receiving-file-app-handler ; apphandler able to upoad fils
   (-> ringhandler
       wrap-params
