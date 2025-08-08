@@ -1,4 +1,6 @@
-# bienvenue dans Barge  !
+# bienvenue dans world activity  !
+- choisis ton activité et fais une site vitrine autour!
+- aec video photo news
 - apt install lein
 
 -     Make sure you have Java installed; OpenJDK is recommended
@@ -13,6 +15,3 @@ lein run
 lein search ring-core
 lein search lein-ring
 ```
-
-# clojure1
-# camp-barge

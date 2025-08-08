@@ -32,7 +32,7 @@
 
  handler1 [request] (ring.util.response/bad-request "Hello"))
 
-(def app-handler
+(def upload-app-handler
   (-> your-handler
       wrap-params
       (wrap-multipart-params {:store (ring.middleware.multipart-params.byte-array/byte-array-store)})
@@ -362,7 +362,7 @@
       wrap-params))
 (def any-app-handler (wrap-resource your-handler "resources")) ;inresurces in here
 
-(def app-handler
+(def file-upload-app-handler
   (-> your-handler
       wrap-params
       (wrap-multipart-params {:store (ring.middleware.multipart-params.byte-array/byte-array-store)})
