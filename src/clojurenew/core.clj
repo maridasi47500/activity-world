@@ -6,15 +6,59 @@
             [clojure.java.jdbc :refer :all]
             [cheshire.core :as json]
             ))
+(ns ring.core
+  (:use ring.adapter.jetty))
+
   (use 'ring.util.codec)
   (use 'clojure.walk)
   (require '[clojure.string :as str])
+(use 'ring.middleware.resource
+     'ring.middleware.content-type
+     'ring.middleware.not-modified)
+
+
 
 (def testdata
   { :url "http://example.com",
    :title "SQLite Example",
    :body "Example using SQLite with Clojure"
    })
+(defn handler [request]
+  {:status 200
+   :headers {"Content-Type" "text/plain"}
+   :body "renvoie toujours Hello World"})
+(defn ringhandler [request] (ring.util.response/response "Hello"))
+
+ handler1 [request] (ring.util.response/bad-request "Hello"))
+
+(def app-handler
+  (-> your-handler
+      wrap-params
+      (wrap-multipart-params {:store (ring.middleware.multipart-params.byte-array/byte-array-store)})
+  )) ; file upload available in params key
+
+(defn handler1 [request] (ring.util.response/created "/post/123"))
+(defn handler1 [request] (ring.util.response/redirect "https://ring-clojure.github.io/ring/"))
+(def your-app-handler ;to serve static 
+  (-> ringhandler
+      (wrap-resource "resources")
+      wrap-content-type
+      wrap-not-modified)
+(def parse-params-app-handler ;to parse params in your app of th url
+  (-> ringhandler ;ringhandler is your handler
+      (wrap-params {:encoding "UTF-8"})
+  ))
+(defn echo-handler [{params :params}]
+    (ring.util.response/content-type
+        (ring.util.response/response (get params "input"))
+        "text/plain")) ;response of a value fo a param in a url string 
+(def receiving-file-app-handler ; apphandler able to upoad fils
+  (-> ringhandler
+      wrap-params
+      wrap-multipart-params
+  ))
+
+
 
 
 
@@ -227,6 +271,10 @@
           (re-find #"^/edit_bain/\d+$" uri) "i"
           :else "404.html")))
   (println hey)
+
+  (defn handler [request] (ring.util.response/response "Hello"))
+
+
   (def html (let [mystr uri]
     (cond
           (re-find #"^/$" uri) (renderhtml "Show my activity world" "welcome.html")
@@ -251,10 +299,51 @@
    :body    body})
 
 
-(defn -main [& args]
+;(defn -main [& args]
+;  (create-db)
+;  (run-server app {:port 8080})
+;  (println "Server started on port 8080"))
+(defn check-ip-handler [request]
+    (ring.util.response/content-type
+        (ring.util.response/response (:remote-addr request))
+        "text/plain"))
+(defn wrap-content-type [handler content-type] ;middleware
+  (fn [request]
+    (let [response (handler request)]
+      (assoc-in response [:headers "Content-Type"] content-type))))
+(def app-handler (wrap-content-type handler "text/html"))
+(def other-app-handler
+  (-> handler
+      (wrap-content-type "text/html")
+      wrap-keyword-params
+      wrap-params))
+
+(defn your-handler [request] (ring.util.response/response "Your handler Hello"))
+(def app-your-handler (wrap-resource your-handler "public"))
+
+(defn echo-handler [{params :params}]
+    (ring.util.response/content-type
+        (ring.util.response/response (get params "input"))
+        "text/plain"))
+(def my-new-app-handler ; original handler (your handler or ring handler) wrapped in 3 middleware function
+  (-> your-handler
+      (wrap-content-type "text/html")
+      wrap-keyword-params
+      wrap-params))
+(def any-app-handler (wrap-resource your-handler "resources")) ;inresurces in here
+
+(def app-handler
+  (-> your-handler
+      wrap-params
+      (wrap-multipart-params {:store (ring.middleware.multipart-params.byte-array/byte-array-store)})
+  ))
+
+(defn -main
+  [& args]
   (create-db)
-  (run-server app {:port 8080})
+  (run-jetty ringhandler {:port 8080})
   (println "Server started on port 8080"))
+
 
 (defn foo
   "I don't do a whole lot."
