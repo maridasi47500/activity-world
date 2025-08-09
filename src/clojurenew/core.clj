@@ -24,12 +24,16 @@
    :title "SQLite Example",
    :body "Example using SQLite with Clojure"
    })
-(defn handler [request]
+(defn helo-wold-handler [request]
   {:status 200
    :headers {"Content-Type" "text/plain"}
    :body "renvoie toujours Hello World"})
 (defn ringhandler [request] (ring.util.response/response "Hello"))
 (defn secondringhandler [request codehtml] (ring.util.response/response codehtml))
+(defn wrap-content-type [handler content-type] ;middleware
+  (fn [request]
+    (let [response (handler request)]
+      (assoc-in response [:headers "Content-Type"] content-type))))
 
  handler1 [request] (ring.util.response/bad-request "Hello"))
 
@@ -39,8 +43,9 @@
       (wrap-multipart-params {:store (ring.middleware.multipart-params.byte-array/byte-array-store)})
   )) ; file upload available in params key
 
-(defn handler1 [request] (ring.util.response/created "/post/123"))
-(defn handler1 [request] (ring.util.response/redirect "https://ring-clojure.github.io/ring/"))
+(defn handlerone [request] (ring.util.response/created "/post/123")) ; create a response to route that is empty ""
+(defn handlertwo [request] (ring.util.response/redirect "https://ring-clojure.github.io/ring/")) ; redirct answer 301
+(defn handlertworedirect [request myurl] (ring.util.response/redirect myurl)) ; redirct answer 301l
 (def your-app-handler ;to serve static 
   (-> ringhandler
       (wrap-resource "resources")
@@ -101,20 +106,11 @@
   (slurp (io/resource hey)))
 
 (defn renderhtml [title hey]
-  {:status 200
-    :body (format (slurp (io/resource "index.html")) title (slurp (io/resource hey)))
-    :contenttype "text/html"
-    })
+    (secondringhandler (format (slurp (io/resource "index.html")) title (slurp (io/resource hey)))))
 (defn renderjs1 [title hey]
-  {:status 200
-    :body (slurp (io/resource hey))
-    :contenttype "text/javascript"
-    })
+    (wrap-content-type (secondringhandler (slurp (io/resource hey))) "text/javascript" ))
 (defn rendercss1 [title hey]
-  {:status 200
-    :body (slurp (io/resource hey))
-    :contenttype "text/css"
-    })
+    (wrap-content-type (secondringhandler (slurp (io/resource hey))) "text/css" ))
 
 
 ;; create db
@@ -152,11 +148,8 @@
   (def title "hey")
   (def hey (if (zero? (count (output))) "<p>il n'y a pas de bain à afficher</p>" body))
   (def reponsebody (format (slurp (io/resource "index.html")) title hey))
-  {:status 200
-    :body reponsebody
-    :contenttype "text/html"
-    :redirect ""
-    })
+  (secondringhandler req reponsebody))
+
 (defn rendercollection [title bdd template req]
   (println "action create")
   (def mytemplate (slurp (io/resource template)))
@@ -166,11 +159,8 @@
   (def title "hey")
   (def hey (if (zero? (count (output))) body1 body))
   (def reponsebody (format (slurp (io/resource "index.html")) title hey))
-  {:status 200
-    :body reponsebody
-    :contenttype "text/html"
-    :redirect ""
-    })
+  (secondringhandler req reponsebody))
+
 (defn actiondelete [title req]
   (println "action delete")
   (def heyreader (io/reader (:body req) :encoding "UTF-8"))
@@ -188,6 +178,7 @@
   ["delete from booking where id = ?"
     id])
   (println "OHOHOH")
+  ;(handlertworedirect req "/voir_reservations"))
   {:status 301
     :body (slurp (io/resource "redirect.html"))
     :contenttype "text/html"
@@ -299,7 +290,7 @@
           :else "404.html")))
   (println hey)
 
-  (defn handler [request] (ring.util.response/response "Hello"))
+  (defn awesome-handler [request] (ring.util.response/response "Hello"))
 
 
   (def html (let [mystr uri]
@@ -308,13 +299,27 @@
           (re-find #"^/app.css$" uri) (rendercss1 "Show my activity world" "app.css")
           (re-find #"^/app.js$" uri) (rendercss1 "Show my activity world" "app.js")
           (re-find #"^/hello$" uri) (renderhtml "Show my activity world" "hello.html")
-          (re-find #"^/reserver$" uri) (renderhtml "Reservation" "form.html")
-          (re-find #"^/action_create_booking$" uri) (actioncreate "hello" "form.html" req)
-          (re-find #"^/action_update_booking$" uri) (actionupdate "hello" "formedit.html" req)
-          (re-find #"^/deletebooking$" uri) (actiondelete "hello"  req)
-          (re-find #"^/voir_reservations$" uri) (rendercollection "hello" output "_reservation.html" req)
-          (re-find #"^/voir_bain/\d+$" uri) (voirbain "hello" "voirbain.html" req (get (re-find #"^/voir_bain/(\d+)$" uri) 1))
-          (re-find #"^/edit_bain/\d+$" uri) (editbain "hello" "formedit.html" req (get (re-find #"^/edit_bain/(\d+)$" uri) 1))
+          (re-find #"^/poster_news$" uri) (renderhtml "poster des news" "form.html")
+          (re-find #"^/action_create_news$" uri) (actioncreate "hello" "form.html" req)
+          (re-find #"^/action_update_news$" uri) (actionupdate "hello" "formedit.html" req)
+          (re-find #"^/deletenews" uri) (actiondelete "hello"  req)
+          (re-find #"^/voir_news$" uri) (rendercollection "hello" output "_reservation.html" req)
+          (re-find #"^/voir_news/\d+$" uri) (voirnews "hello" "voirnews.html" req (get (re-find #"^/voir_news/(\d+)$" uri) 1))
+          (re-find #"^/edit_news/\d+$" uri) (editnews "hello" "formedit.html" req (get (re-find #"^/edit_news/(\d+)$" uri) 1))
+          (re-find #"^/poster_video$" uri) (renderhtml "poster des video" "form.html")
+          (re-find #"^/action_create_video$" uri) (actioncreate "hello" "form.html" req)
+          (re-find #"^/action_update_video$" uri) (actionupdate "hello" "formedit.html" req)
+          (re-find #"^/deletevideo" uri) (actiondelete "hello"  req)
+          (re-find #"^/voir_video$" uri) (rendercollection "hello" output "_reservation.html" req)
+          (re-find #"^/voir_video/\d+$" uri) (voirvideo "hello" "voirvideo.html" req (get (re-find #"^/voir_video/(\d+)$" uri) 1))
+          (re-find #"^/edit_video/\d+$" uri) (editvideo "hello" "formedit.html" req (get (re-find #"^/edit_video/(\d+)$" uri) 1))
+          (re-find #"^/poster_photo$" uri) (renderhtml "poster des photo" "form.html")
+          (re-find #"^/action_create_photo$" uri) (actioncreate "hello" "form.html" req)
+          (re-find #"^/action_update_photo$" uri) (actionupdate "hello" "formedit.html" req)
+          (re-find #"^/deletephoto" uri) (actiondelete "hello"  req)
+          (re-find #"^/voir_photo$" uri) (rendercollection "hello" output "_reservation.html" req)
+          (re-find #"^/voir_photo/\d+$" uri) (voirphoto "hello" "voirphoto.html" req (get (re-find #"^/voir_photo/(\d+)$" uri) 1))
+          (re-find #"^/edit_photo/\d+$" uri) (editphoto "hello" "formedit.html" req (get (re-find #"^/edit_photo/(\d+)$" uri) 1))
           :else (renderhtml "Erreur" "404.html"))))
   (def status (get html :status 200))
   (def content (get html :contenttype "text/html"))
@@ -334,10 +339,7 @@
     (ring.util.response/content-type
         (ring.util.response/response (:remote-addr request))
         "text/plain"))
-(defn wrap-content-type [handler content-type] ;middleware
-  (fn [request]
-    (let [response (handler request)]
-      (assoc-in response [:headers "Content-Type"] content-type))))
+
 (def app-handler (wrap-content-type handler "text/html"))
 (def other-app-handler
   (-> handler

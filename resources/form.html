@@ -1,58 +1,24 @@
 <section>
-<h2><a id="reserverboto">Réservation d'une journée ou une demi journée</a></h2>
-<form action="/action_create_booking" method="post">
+<h2><span id="reserverboto">Poster une nouvelle news avec une photo (ou une nouvelle <a>photo</a>, ou une nouvelle <a>vidéo</a>)</span></h2>
+<form action="/action_create_news" method="post">
 <div class="field">
-<label for="form_nom">
-nom
+<label for="form_title">
+title
 </label>
-<input id="form_nom" name="nom" type="text"/>
+<input id="form_title" name="title" type="text"/>
 </div>
 <div class="field">
-<label for="form_prenom">
-prénom
+<label for="form_photo">
+photo
 </label>
-<input id="form_prenom" name="prenom" type="text"/>
-</div>
-<div class="field">
-<label for="form_numero">
-numero
-</label>
-<input id="form_numero" name="numero" type="text"/>
-</div>
-<div class="field">
-<label for="form_email">
-email
-</label>
-<input id="form_email" name="email" type="email"/>
-</div>
-<div class="field">
-<label for="form_date">
-date de ma réservation
-</label>
-<input id="form_date" name="date" type="date"/>
+<input id="form_photo" name="photo" type="text"/>
 </div>
 <div class="field">
 <label for="form_content">
-contenu de ma réservation
+content
 </label>
 <textarea id="form_content" name="content">
 </textarea>
-</div>
-<div class="field">
-<label for="form_journee">
-journee/demi - journee
-</label>
-<select required name="journee" id="form_journee">
-<option value="">
-selectionner journee ou demi journee
-</option>
-<option value="1">
-journee
-</option>
-<option value="demi">
-demi journee
-</option>
-</select>
 </div>
 <div class="actions">
 <input id="submitbath" name="envoyer" value="soumettre ma réservation" type="submit"/>
