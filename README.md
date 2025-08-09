@@ -15,3 +15,4 @@ lein run
 lein search ring-core
 lein search lein-ring
 ```
+- dans modele_bain clj et route news , tu as un modele pour "news" ou "bain", tu peux modifier comme un scaffold pour avir la base de données et plusieurs formulaires poiur une autre table

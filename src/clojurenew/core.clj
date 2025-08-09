@@ -189,10 +189,8 @@
   (def heyreader (io/reader (:body req) :encoding "UTF-8"))
   (println heyreader)
   (println "hey HEY action create")
-  (println "hHo")
   (def a (slurp heyreader) )
   (println a)
-
   (def myhash (keywordize-keys (form-decode a)))
   (println "hey HEY he")
   (println myhash)
