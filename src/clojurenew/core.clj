@@ -5,9 +5,11 @@
             [clj-time.core :as t]
             [clojure.java.jdbc :refer :all]
             [cheshire.core :as json]
-            ))
+            )
+)
 (ns ring.core
   (:use ring.adapter.jetty))
+(ns clojurenew.core
 
   (use 'ring.util.codec)
   (use 'ring.util.response)
@@ -25,7 +27,7 @@
   (require '[org.httpkit.server :as myserver])
 (use 'ring.middleware.resource
      'ring.middleware.content-type
-     'ring.middleware.not-modified)
+     'ring.middleware.not-modified))
 
 
 
