@@ -10,6 +10,8 @@
   (:use ring.adapter.jetty))
 
   (use 'ring.util.codec)
+  (use 'ring.middleware.multipart-params)
+  (use 'ring.middleware.multipart-params.byte-array)
   (use 'clojure.walk)
   (require '[clojure.string :as str])
 (use 'ring.middleware.resource
@@ -24,23 +26,33 @@
    :title "SQLite Example",
    :body "Example using SQLite with Clojure"
    })
+(defn your-handler [request] (ring.util.response/response "Your handler Hello"))
 (defn helo-wold-handler [request]
   {:status 200
    :headers {"Content-Type" "text/plain"}
    :body "renvoie toujours Hello World"})
 (defn ringhandler [request] (ring.util.response/response "Hello"))
 (defn secondringhandler [request codehtml] (ring.util.response/response codehtml))
-(defn wrap-content-type [handler content-type] ;middleware
+(defn som-func-wrap-content-type [handler content-type] ;middleware
   (fn [request]
     (let [response (handler request)]
       (assoc-in response [:headers "Content-Type"] content-type))))
 
- handler1 [request] (ring.util.response/bad-request "Hello"))
+(defn wrap-my-params [handler contenttype] ;middleware
+  (fn [request]
+    (let [response (handler request)]
+      (assoc-in response [:headers "Content-Type"] contenttype))))
+(def parse-params-app-handler ;to parse params in your app of th url
+  (-> ringhandler ;ringhandler is your handler
+      (wrap-my-params [{:encoding "UTF-8"}] "text/html")
+  ))
 
-(def upload-app-handler
+(defn  someringhandler [request] (ring.util.response/bad-request "Hello"))
+
+(defn upload-app-handler [handler content-type]
   (-> your-handler
-      wrap-params
-      (wrap-multipart-params {:store (ring.middleware.multipart-params.byte-array/byte-array-store)})
+      (som-func-wrap-content-type handler content-type)
+      (wrap-multipart-params {:store (byte-array-store)})
   )) ; file upload available in params key
 
 (defn handlerone [request] (ring.util.response/created "/post/123")) ; create a response to route that is empty ""
@@ -50,11 +62,8 @@
   (-> ringhandler
       (wrap-resource "resources")
       wrap-content-type
-      wrap-not-modified)
-(def parse-params-app-handler ;to parse params in your app of th url
-  (-> ringhandler ;ringhandler is your handler
-      (wrap-params {:encoding "UTF-8"})
-  ))
+      wrap-not-modified))
+
 (defn echo-handler [{params :params}]
     (ring.util.response/content-type
         (ring.util.response/response (get params "input"))
@@ -337,7 +346,7 @@
       wrap-keyword-params
       wrap-params))
 
-(defn your-handler [request] (ring.util.response/response "Your handler Hello"))
+
 (def app-your-handler (wrap-resource your-handler "public"))
 
 (defn echo-handler [{params :params}]
