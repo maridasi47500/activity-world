@@ -22,6 +22,7 @@
   (require '[clojure.java.jdbc :as mydb])
   (require '[clojure.string :as str])
   (require '[clojure.java.io :as io])
+  (require '[org.httpkit.server :as myserver])
 (use 'ring.middleware.resource
      'ring.middleware.content-type
      'ring.middleware.not-modified)
@@ -340,10 +341,10 @@
    :body    body})
 
 
-;(defn -main [& args]
-;  (create-db)
-;  (run-server app {:port 8080})
-;  (println "Server started on port 8080"))
+(defn -main [& args]
+  (create-db)
+  (myserver/run-server app {:port 8080})
+  (println "Server started on port 8080"))
 (defn check-ip-handler [request]
     (ring.util.response/content-type
         (ring.util.response/response (:remote-addr request))
@@ -376,11 +377,6 @@
       (wrap-multipart-params {:store (ring.middleware.multipart-params.byte-array/byte-array-store)})
   ))
 
-(defn -main
-  [& args]
-  (create-db)
-  (run-jetty ringhandler {:port 8080})
-  (println "Server started on port 8080"))
 
 
 (defn foo
