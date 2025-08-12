@@ -10,10 +10,16 @@
   (:use ring.adapter.jetty))
 
   (use 'ring.util.codec)
+  (use 'ring.util.response)
   (use 'ring.middleware.multipart-params)
   (use 'ring.middleware.multipart-params.byte-array)
+  (use 'ring.middleware.cookies)
+  (use 'ring.middleware.params)
+  (use 'ring.middleware.session)
+  (use 'ring.middleware.session.cookie)
   (use 'clojure.walk)
   (require '[clojure.string :as str])
+  (require '[clojure.java.io :as io])
 (use 'ring.middleware.resource
      'ring.middleware.content-type
      'ring.middleware.not-modified)
@@ -38,13 +44,15 @@
     (let [response (handler request)]
       (assoc-in response [:headers "Content-Type"] content-type))))
 
-(defn wrap-my-params [handler contenttype] ;middleware
+(defn wrap-my-params [handler encoding contenttype] ;middleware
   (fn [request]
     (let [response (handler request)]
-      (assoc-in response [:headers "Content-Type"] contenttype))))
-(def parse-params-app-handler ;to parse params in your app of th url
+      (assoc-in response [:headers "Content-Type"] contenttype)
+      (assoc-in response [:headers "Encoding"] encoding)
+)))
+(def parse-params-app-handler  ;to parse params in your app of th url
   (-> ringhandler ;ringhandler is your handler
-      (wrap-my-params [{:encoding "UTF-8"}] "text/html")
+      (wrap-params {:encoding "UTF-8"})
   ))
 
 (defn  someringhandler [request] (ring.util.response/bad-request "Hello"))
