@@ -12,12 +12,14 @@
   (use 'ring.util.codec)
   (use 'ring.util.response)
   (use 'ring.middleware.multipart-params)
+  (use 'ring.middleware.keyword-params)
   (use 'ring.middleware.multipart-params.byte-array)
   (use 'ring.middleware.cookies)
   (use 'ring.middleware.params)
   (use 'ring.middleware.session)
   (use 'ring.middleware.session.cookie)
   (use 'clojure.walk)
+  (require '[clojure.java.jdbc :as mydb])
   (require '[clojure.string :as str])
   (require '[clojure.java.io :as io])
 (use 'ring.middleware.resource
@@ -139,11 +141,11 @@
 (defn output
   "execute query and return lazy sequence"
   []
-  (query db ["select * from news"]))
+  (mydb/query db ["select * from news"]))
 (defn getbyid
   "execute query and return lazy sequence"
   [myid]
-  (query db ["select * from news where id = ?" myid]))
+  (mydb/query db ["select * from news where id = ?" myid]))
 
 (defn voirnews [title template req myid]
   (println "action voirnew")
@@ -191,7 +193,7 @@
   (println "hey HEY he")
   (println myhash)
   (def id (get myhash :myid ""))
-  (execute! db
+  (mydb/execute! db
   ["delete from news where id = ?"
     id])
   (println "OHOHOH")
@@ -215,7 +217,7 @@
   (def url (get myhash :url "url"))
   (def body (str/join "" (get myhash :body ["ur" "body"]) ))
   (def id (get myhash :id ""))
-  (execute! db
+  (mydb/execute! db
   ["update news set title = ?, image = ?, body = ? where id = ?"
    mytitle url body id])
   (println "OHOHOH")
@@ -240,7 +242,7 @@
   (def mytestdata {:image (get myhash :nom "hye")
                    :title (get myhash :prenom "url")
                    :content (get myhash :journee "url") })
-  (insert! db :news mytestdata)
+  (mydb/insert! db :news mytestdata)
   (println "OHOHOH")
   {:status 301
     :body (slurp (io/resource "redirect.html"))
@@ -251,8 +253,8 @@
 (defn create-db
   "create db and table"
   []
-  (try (db-do-commands db
-                       (create-table-ddl :news
+  (try (mydb/db-do-commands db
+                       (mydb/create-table-ddl :news
                                          [[:id "integer primary key autoincrement" ]
                                           [:timestamp :datetime :default :current_timestamp ]
                                           [:title :text]
@@ -271,7 +273,7 @@
 (defn output
   "execute query and return lazy sequence"
   []
-  (query db ["select * from news"]))
+  (mydb/query db ["select * from news"]))
 
 
 
@@ -328,13 +330,13 @@
           ;(re-find #"^/voir_photo/\d+$" uri) (voirphoto "hello" "voirphoto.html" req (get (re-find #"^/voir_photo/(\d+)$" uri) 1))
           ;(re-find #"^/edit_photo/\d+$" uri) (editphoto "hello" "formedit.html" req (get (re-find #"^/edit_photo/(\d+)$" uri) 1))
           :else (renderhtml "Erreur" "404.html"))))
-  (def status (get html :status 200))
+  (def mystatus (get html :status 200))
   (def content (get html :contenttype "text/html"))
   (def body (get html :body "<h1>erreur 404 desole</h1>"))
-  (def redirect (get html :redirect ""))
-  {:status  status
+  (def myredirect (get html :redirect ""))
+  {:status  mystatus
    :headers {"Content-Type" content
-             "Location" redirect}
+             "Location" myredirect}
    :body    body})
 
 
@@ -347,8 +349,8 @@
         (ring.util.response/response (:remote-addr request))
         "text/plain"))
 
-(def app-handler (wrap-content-type handler "text/html"))
-(def other-app-handler
+(defn app-handler [handler] (wrap-content-type handler "text/html"))
+(defn other-app-handler [handler]
   (-> handler
       (wrap-content-type "text/html")
       wrap-keyword-params
