@@ -11,6 +11,7 @@
 
   ;; Home and hello
   (GET "/hello" [] h/home)
+  (GET "/" [] h/home)
 
   ;; News: routes preserved as in original code
   (GET "/poster_news" [] h/poster-news)

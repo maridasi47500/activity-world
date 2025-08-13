@@ -9,11 +9,24 @@
 
 (defn render-html
   "Render an HTML template from resources."
-  [template & [params]]
+  [template title content]
   (let [tpl (slurp (io/resource template))]
-    (if params
-      (apply format tpl params)
-      tpl)))
+    (if title
+    (if content
+      (format tpl title content)
+      ))))
+;(defn render-html
+;  "Render an HTML template from resources."
+;  [template & [params]]
+;  (let [tpl (slurp (io/resource template))]
+;    (if params
+;      (format tpl params)
+;      tpl)))
+
+(defn my-html
+  "Render an HTML template from resources."
+  [template & [params]]
+  (slurp (io/resource template)))
 
 (defn render-collection
   "Render a collection of news into a template."
@@ -32,14 +45,17 @@
   (-> (response/response (slurp (io/resource file)))
       (response/content-type "text/javascript")))
 
+(defn mes-mots [template debut-mot-string fin-mot-html]
+    (render-html (str template) (str debut-mot-string) (str (my-html fin-mot-html))))
+
 (defn home [_]
   (response/content-type
-    (response/response (render-html "hello.html"))
+    (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
 
 (defn poster-news [_]
   (response/content-type
-    (response/response (render-html "form.html"))
+    (response/response (render-html "form.html" "he" "hi"))
     "text/html"))
 
 (defn voir-news [_]
@@ -56,7 +72,7 @@
         news (db/get-news-by-id id)]
     (if news
       (response/content-type
-        (response/response (render-html "voirnews.html" (:title news) (:content news) (:url news)))
+        (response/response (render-html "voirnews.html" "hey" "wow" (:title news) (:content news) (:url news)))
         "text/html")
       (response/not-found "News not found"))))
 
@@ -65,7 +81,7 @@
         news (db/get-news-by-id id)]
     (if news
       (response/content-type
-        (response/response (render-html "formedit.html" (:title news) (:content news) (:url news)))
+        (response/response (render-html "formedit.html" "hey" "wow" (:title news) (:content news) (:url news)))
         "text/html")
       (response/not-found "News not found"))))
 
@@ -88,6 +104,6 @@
         (response/status 303))))
 
 (defn not-found-handler [_]
-  (-> (response/response (render-html "404.html"))
+  (-> (response/response (render-html "404.html" "hey" "hi"))
       (response/status 404)
       (response/content-type "text/html")))
