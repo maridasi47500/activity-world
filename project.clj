@@ -15,6 +15,8 @@
                  [ring/ring-codec "1.2.0"]
                  [ring/ring-core "1.7.1"]
                  [ring/ring-jetty-adapter "1.7.1"]
+                 [ring/ring-defaults "0.3.4"]
                  [compojure "1.7.1"]]
   :repl-options {:init-ns clojurenew.core}
   :main clojurenew.core)
+

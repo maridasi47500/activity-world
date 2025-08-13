@@ -1,6 +1,10 @@
+
 (ns clojurenew.core
   "Main entry for Activity World: server, middleware, and startup."
-  (:require [org.httpkit.server :refer [run-server]]
+  (:require [compojure.core :refer [defroutes GET]]
+            [compojure.route :as route]
+            [ring.util.response :as response]
+            [org.httpkit.server :refer [run-server]]
             [clojurenew.db :as db]
             [clojurenew.routes :refer [app-routes]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]

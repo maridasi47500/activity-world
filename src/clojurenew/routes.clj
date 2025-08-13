@@ -1,7 +1,8 @@
 (ns clojurenew.routes
   "Compojure routes for Activity World (routes unchanged for view compatibility)."
   (:require [compojure.core :refer :all]
-            [clojurenew.handlers :as h]))
+            [clojurenew.handlers :as h]
+            [compojure.route :as route]))
 
 (defroutes app-routes
   ;; CSS and JS (if needed, adapt as per your previous code)
