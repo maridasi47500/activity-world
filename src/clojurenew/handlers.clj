@@ -1,5 +1,6 @@
 (ns clojurenew.handlers
   "Ring handlers for Activity World."
+  (:use ring.adapter.jetty)
   (:require [clojurenew.db :as db]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -66,6 +67,17 @@
         (db/get-news)
         (slurp (io/resource "_reservation.html"))))
     "text/html"))
+(defn render-pic [hey]
+        (slurp (io/resource hey)))
+
+
+(defn voir-photo-mypic [req]
+  (let [somepic ((req :params) :mypic)]
+    (if somepic
+      (response/content-type
+        (response/response (render-pic somepic))
+        "image/jpeg")
+      (response/not-found "image not found"))))
 
 (defn voir-news-id [req]
   (let [id (get-in req [:params :id])
@@ -87,6 +99,9 @@
 
 (defn action-create-news [req]
   (let [params (if (:form-params req) (:form-params req) (:params req))]
+    (def photo ((params :photo) :tempfile))
+    (def scores {"title" (params :title), "photo" ((params :photo) :filename), "content" (params :content)})
+
     (db/insert-news! params)
     (-> (response/redirect "/voir_news")
         (response/status 303))))

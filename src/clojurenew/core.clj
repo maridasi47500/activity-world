@@ -8,7 +8,9 @@
             [clojurenew.db :as db]
             [clojurenew.routes :refer [app-routes]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.multipart-params.byte-array :as byte-array]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+
             [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.session.cookie :refer [cookie-store]]))
 
@@ -17,6 +19,7 @@
       (wrap-defaults (-> site-defaults
                          (assoc-in [:session :store] (cookie-store {:key "a 16-byte secret"}))))
       wrap-multipart-params))
+      ;wrap-multipart-params {:store (ring.middleware.multipart-params.byte-array/byte-array-store)}))
 
 (defn -main
   "Main entrypoint: ensure DB/tables, start HTTP server."

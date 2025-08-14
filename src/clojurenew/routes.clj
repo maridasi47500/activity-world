@@ -9,6 +9,9 @@
   (GET "/app.css" [] (h/render-css "Show my activity world" "app.css"))
   (GET "/app.js" [] (h/render-js "Show my activity world" "app.js"))
 
+  ;;pic 
+  (GET ":mypic.jpeg" [mypic :as req] (h/voir-photo-mypic (assoc-in req [:params :mypic] mypic)))
+
   ;; Home and hello
   (GET "/hello" [] h/home)
   (GET "/" [] h/home)
