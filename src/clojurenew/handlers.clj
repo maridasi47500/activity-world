@@ -1,9 +1,11 @@
 (ns clojurenew.handlers
   "Ring handlers for Activity World."
   (:use ring.adapter.jetty)
+  (:import [javax.imageio ImageIO])
   (:require [clojurenew.db :as db]
             [clojure.java.io :as io]
             [clojure.string :as str]
+            [ring.util.anti-forgery :refer [anti-forgery-field]]
             [clojure.walk :refer [keywordize-keys]]
             [ring.util.response :as response]
             [ring.util.codec :as codec]))
@@ -68,7 +70,11 @@
         (slurp (io/resource "_reservation.html"))))
     "text/html"))
 (defn render-pic [hey]
-        (slurp (io/resource hey)))
+    ;    (slurp (io/resource hey)))
+    (let [image (ImageIO/read (io/resource hey))
+      image-file (java.io.File. (io/resource hey))]
+  (ImageIO/write image "jpg" image-file)))
+
 
 
 (defn voir-photo-mypic [req]

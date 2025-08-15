@@ -14,9 +14,11 @@
                  [cheshire "5.12.0"]
                  [ring/ring-codec "1.2.0"]
                  [ring/ring-core "1.7.1"]
+                 [ring/ring-anti-forgery "1.4.0"]
                  [ring/ring-jetty-adapter "1.7.1"]
                  [ring/ring-defaults "0.3.4"]
-                 [compojure "1.7.1"]]
+                 [clojure-interop/javax.imageio "1.0.5"]
+                 [compojure "1.7.1" :exclusions [ring/ring-core]]]
   :repl-options {:init-ns clojurenew.core}
   :main clojurenew.core)
 
