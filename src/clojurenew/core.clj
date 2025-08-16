@@ -16,7 +16,7 @@
 (def app
   (-> app-routes
       (wrap-defaults (-> site-defaults
-                         (assoc-in [:session :store] (cookie-store {:key "a 16-byte secret"}))))
+                         (assoc-in [:session :store] (cookie-store {:key "abcdefg123456789"})))) ;a 16 long character string
       (wrap-anti-forgery app-protected-routes)
       (wrap-session)
       (wrap-multipart-params {:store (byte-array-store)})))
