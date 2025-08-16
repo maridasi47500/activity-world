@@ -94,13 +94,13 @@
     "text/html"))
 
 (defn poster-news [_]
-  (cookie-store {:key (.getBytes "1234567890abcdef")})
+  ;(cookie-store {:key (.getBytes "1234567890abcdef")})
   (response/content-type
     (response/response (render-html "form.html" "he" "hi"))
     "text/html"))
 
 (defn action-create-news [req]
-  (cookie-store {:key (.getBytes "1234567890abcdef")})
+  ;(cookie-store {:key (.getBytes "1234567890abcdef")})
   (let [params (if (:form-params req) (:form-params req) (:params req))]
     (def photo ((params :photo) :tempfile))
     (def scores {"title" (params :title), "photo" ((params :photo) :filename), "content" (params :content)})
