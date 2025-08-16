@@ -4,7 +4,14 @@
             [clojurenew.handlers :as h]
             [compojure.route :as route]))
 
+(defroutes app-protected-routes
+  ;(GET "/poster_news" [] h/poster-news)
+  (POST "/action_create_news" req (h/action-create-news req)))
+
 (defroutes app-routes
+  (GET "/clear-session" [] h/clear-session)
+  (GET "/poster_news" [] h/poster-news)
+  (POST "/action_create_news" req (h/action-create-news req))
   ;; CSS and JS (if needed, adapt as per your previous code)
   (GET "/app.css" [] (h/render-css "Show my activity world" "app.css"))
   (GET "/app.js" [] (h/render-js "Show my activity world" "app.js"))
@@ -17,11 +24,11 @@
   (GET "/" [] h/home)
 
   ;; News: routes preserved as in original code
-  (GET "/poster_news" [] h/poster-news)
+
   (GET "/voir_news" [] h/voir-news)
   (GET "/voir_news/:id" [id :as req] (h/voir-news-id (assoc-in req [:params :id] id)))
   (GET "/edit_news/:id" [id :as req] (h/edit-news-id (assoc-in req [:params :id] id)))
-  (POST "/action_create_news" req (h/action-create-news req))
+
   (POST "/action_update_news" req (h/action-update-news req))
   (POST "/deletenews/:id" [id :as req] (h/action-delete-news (assoc-in req [:params :id] id)))
 

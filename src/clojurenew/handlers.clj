@@ -9,6 +9,43 @@
             [clojure.walk :refer [keywordize-keys]]
             [ring.util.response :as response]
             [ring.util.codec :as codec]))
+(defn clear-session [request]
+  {:status 302
+   :headers {"Location" "/"}
+   :session nil}) ;; This clears the session
+(require '[ring.middleware.session.cookie :refer [cookie-store]])
+
+;;;;;;;;;;;;;;;;;;;
+;(def session-config
+;  {:store (cookie-store {:key (.getBytes "1234567890abcdef")})}) ;; 16-byte key
+;(import 'java.security.SecureRandom)
+;
+;(defn generate-key []
+;  (let [bytes (byte-array 16)]
+;    (.nextBytes (SecureRandom.) bytes)
+;    bytes))
+;
+;(require '[ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+;         '[ring.middleware.session :refer [wrap-session]])
+;
+;(def app
+;  (-> handler
+;      wrap-anti-forgery
+;      (wrap-session session-config)))
+;
+;(require '[ring.util.anti-forgery :refer [anti-forgery-field]])
+;
+;(defn form-page [request]
+;  [:form {:method "POST" :action "/submit"}
+;   (anti-forgery-field)
+;   [:input {:type "text" :name "data"}]
+;   [:input {:type "submit"}]])
+;
+;;<input type="hidden" name="__anti-forgery-token" value="...">
+
+;;;;;;;;;;;
+
+
 
 (defn render-html
   "Render an HTML template from resources."
@@ -57,9 +94,20 @@
     "text/html"))
 
 (defn poster-news [_]
+  (cookie-store {:key (.getBytes "1234567890abcdef")})
   (response/content-type
     (response/response (render-html "form.html" "he" "hi"))
     "text/html"))
+
+(defn action-create-news [req]
+  (cookie-store {:key (.getBytes "1234567890abcdef")})
+  (let [params (if (:form-params req) (:form-params req) (:params req))]
+    (def photo ((params :photo) :tempfile))
+    (def scores {"title" (params :title), "photo" ((params :photo) :filename), "content" (params :content)})
+
+    (db/insert-news! params)
+    (-> (response/redirect "/voir_news")
+        (response/status 303))))
 
 (defn voir-news [_]
   (response/content-type
@@ -103,14 +151,6 @@
         "text/html")
       (response/not-found "News not found"))))
 
-(defn action-create-news [req]
-  (let [params (if (:form-params req) (:form-params req) (:params req))]
-    (def photo ((params :photo) :tempfile))
-    (def scores {"title" (params :title), "photo" ((params :photo) :filename), "content" (params :content)})
-
-    (db/insert-news! params)
-    (-> (response/redirect "/voir_news")
-        (response/status 303))))
 
 (defn action-update-news [req]
   (let [params (if (:form-params req) (:form-params req) (:params req))]
