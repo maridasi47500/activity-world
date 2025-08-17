@@ -11,19 +11,37 @@
             [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.session.cookie :refer [cookie-store]]
-            [hiccup.core :refer [html]])
-  (import 'java.security.SecureRandom))
+            [hiccup.core :refer [html]]))
+(import 'java.security.SecureRandom)
+(import 'java.util.Base64)
+
+(defn generate-key-hex []
+  (let [bytes (byte-array 16)]
+    (.nextBytes (SecureRandom.) bytes)
+    (apply str (map #(format "%02x" %) bytes))))
+
+
+
+(defn generate-key-base64 []
+  (let [bytes (byte-array 16)]
+    (.nextBytes (SecureRandom.) bytes)
+    (.encodeToString (Base64/getEncoder) bytes)))
+
 
 (defn generate-key []
   (let [bytes (byte-array 16)]
-    (.nextBytes (SecureRandom.) bytes)
-    bytes))
+        (.nextBytes (SecureRandom.) bytes)))
+
+(def fixed-key (.getBytes "0123456789abcdef" "UTF-8"))
+(def session-store (cookie-store {:key fixed-key}))
+(def my-session-store (cookie-store {:key (generate-key-hex)}))
+
 
 
 (def app
   (-> app-routes
       (wrap-defaults (-> site-defaults
-                         (assoc-in [:session :store] (cookie-store {:key generate-key})))) ;a 16 long character string
+                         (assoc-in [:session :store] session-store))) ;a 16 long character string
       (wrap-anti-forgery app-protected-routes)
       (wrap-session)
       (wrap-multipart-params {:store (byte-array-store)})))

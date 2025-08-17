@@ -18,6 +18,8 @@
                  [ring/ring-jetty-adapter "1.7.1"]
                  [ring/ring-defaults "0.3.4"]
                  [clojure-interop/javax.imageio "1.0.5"]
+                 [clojure-interop/java.security "1.0.5"]
+                 [clojure-interop/java.util "1.0.5"]
                  [hiccup "2.0.0"]
                  [compojure "1.7.1" :exclusions [ring/ring-core]]]
   :repl-options {:init-ns clojurenew.core}
