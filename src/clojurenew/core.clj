@@ -32,18 +32,18 @@
   (let [bytes (byte-array 16)]
         (.nextBytes (SecureRandom.) bytes)))
 
-(def fixed-key (.getBytes "0123456789abcdef" "UTF-8"))
-(def session-store (cookie-store {:key fixed-key}))
-(def my-session-store (cookie-store {:key (generate-key-hex)}))
+
+
 
 
 
 (def app
   (-> app-routes
       (wrap-defaults (-> site-defaults
-                         (assoc-in [:session :store] session-store))) ;a 16 long character string
-      (wrap-anti-forgery app-protected-routes)
+
+)) ;a 16 long bytes string
       (wrap-session)
+      (wrap-anti-forgery)
       (wrap-multipart-params {:store (byte-array-store)})))
 
 (defn -main
