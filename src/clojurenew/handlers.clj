@@ -2,49 +2,17 @@
   "Ring handlers for Activity World."
   (:use ring.adapter.jetty)
   (:import [javax.imageio ImageIO])
-  (:require [clojurenew.db :as db]
+  (:require [hiccup.page :as hic-p]
+            [hiccup.element :as hic-e]
+            [ring.util.anti-forgery :refer [anti-forgery-field]]
+            [hiccup.form :as hf]
+            [clojurenew.db :as db]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
             [clojure.walk :refer [keywordize-keys]]
             [ring.util.response :as response]
             [ring.util.codec :as codec]))
-(defn clear-session [request]
-  {:status 302
-   :headers {"Location" "/"}
-   :session nil}) ;; This clears the session
-
-;;;;;;;;;;;;;;;;;;;
-;(def session-config
-;(import 'java.security.SecureRandom)
-;
-;(defn generate-key []
-;  (let [bytes (byte-array 16)]
-;    (.nextBytes (SecureRandom.) bytes)
-;    bytes))
-;
-;(require '[ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-;         '[ring.middleware.session :refer [wrap-session]])
-;
-;(def app
-;  (-> handler
-;      wrap-anti-forgery
-;      (wrap-session session-config)))
-;
-;(require '[ring.util.anti-forgery :refer [anti-forgery-field]])
-;
-;(defn form-page [request]
-;  [:form {:method "POST" :action "/submit"}
-;   (anti-forgery-field)
-;   [:input {:type "text" :name "data"}]
-;   [:input {:type "submit"}]])
-;
-;;<input type="hidden" name="__anti-forgery-token" value="...">
-
-;;;;;;;;;;;
-
-
-
 (defn render-html
   "Render an HTML template from resources."
   [template title content]
@@ -53,13 +21,6 @@
     (if content
       (format tpl title content)
       ))))
-;(defn render-html
-;  "Render an HTML template from resources."
-;  [template & [params]]
-;  (let [tpl (slurp (io/resource template))]
-;    (if params
-;      (format tpl params)
-;      tpl)))
 
 (defn my-html
   "Render an HTML template from resources."
@@ -82,6 +43,49 @@
 (defn render-js [title file]
   (-> (response/response (slurp (io/resource file)))
       (response/content-type "text/javascript")))
+(defn clear-session [request]
+  {:status 302
+   :headers {"Location" "/"}
+   :session nil}) ;; This clears the session
+
+(defn gen-page-head
+  [title]
+  [:head
+   [:title title]])
+
+
+(defn form-news-page
+  [req]
+  (hic-p/html5
+    (gen-page-head "Json Parser Home.")
+    [:h1 "Welcome."]
+    [:p "Json Web App."]
+     (hic-e/link-to "/action_create_news" "accueil world activity")
+    [:p (hf/form-to [:post "/action_create_news"]
+    [:div
+         (hf/label "title" "title")    
+         (hf/text-field "title")    
+      ]
+    [:div
+         (hf/label "photo" "photo")    
+         (hf/file-upload "photo")    
+      ]
+    [:div
+         (hf/label "content" "content")    
+         (hf/text-area "content")    
+      ]
+         (anti-forgery-field)
+         (hf/submit-button "Submit"))]))
+
+
+
+(defn poster-news [request]
+  (response/content-type
+    (response/response (render-html "index.html" "ajouter une news" (form-news-page request)))
+    "text/html"))
+
+
+
 
 (defn mes-mots [template debut-mot-string fin-mot-html]
     (render-html (str template) (str debut-mot-string) (str (my-html fin-mot-html))))
@@ -91,17 +95,14 @@
     (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
 
-(defn poster-news [_]
-  (response/content-type
-    (response/response (render-html "form.html" "he" "hi"))
-    "text/html"))
 
-(defn action-create-news [req]
-  (let [params (if (:form-params req) (:form-params req) (:params req))]
-    (def photo ((params :photo) :tempfile))
-    (def scores {"title" (params :title), "photo" ((params :photo) :filename), "content" (params :content)})
 
-    (db/insert-news! params)
+(defn action-create-news [title photo content]
+  (if [title photo & content]
+    (def myphoto (photo :tempfile))
+    (def scores {"title" title, "photo" (photo :filename), "content" content})
+
+    (db/insert-news! scores)
     (-> (response/redirect "/voir_news")
         (response/status 303))))
 
