@@ -95,28 +95,28 @@
   (response/content-type
     (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
+(defn action-create-news [request]
+  (let [{:keys [title content photo]} (:params request)
+        tempfile (:tempfile photo)
+        filename (:filename photo)
+        target-path (str "resources/public/uploads/" filename)]
+    (if (and title content photo)
+      (do
+        ;; Copie le fichier dans le dossier resources/public/uploads
+        (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
+        ;; Enregistre les infos dans la DB
+        (db/insert-news! {"title" title
+                          "photo" filename
+                          "content" content})
+        (-> (response/redirect "/voir_news")
+            (response/status 303)))
+      ;; Si les champs sont manquants
+      (response/content-type
+       (response/response (render-html "index.html" "ajouter une news" (form-news-page request)))
+       "text/html"))))
 
 
 
-(defn action-create-news [title photo content]
-  (if ( and (some? title) (some? photo) (some? content))
-;1 if paramsj
-     (
-    (def myphoto (photo :tempfile))
-    (def scores {"title" title, "photo" (photo :filename), "content" content})
-
-    (db/insert-news! scores)
-    (-> (response/redirect "/voir_news")
-        (response/status 303))
-
-)
-;2
-   (response/content-type
-    (response/response (render-html "index.html" "ajouter une news" (form-news-page request)))
-    "text/html") 
-)
-  
-)
 
 (defn voir-news [_]
   (response/content-type

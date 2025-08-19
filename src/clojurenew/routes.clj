@@ -11,7 +11,7 @@
 (defroutes app-routes
   (GET "/clear-session" [] h/clear-session)
   (GET "/poster_news" req (h/poster-news req))
-  (POST "/action_create_news" [title photo content] (h/action-create-news title photo content))
+  (POST "/action_create_news" [request] (h/action-create-news request))
 
   ;; CSS and JS (if needed, adapt as per your previous code)
   (GET "/app.css" [] (h/render-css "Show my activity world" "app.css"))

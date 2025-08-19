@@ -21,6 +21,7 @@
                  [clojure-interop/java.security "1.0.5"]
                  [clojure-interop/java.util "1.0.5"]
                  [hiccup "2.0.0"]
+                 [gorillalabs/ring-anti-forgery-strategies "1.2.0"]
                  [compojure "1.7.1" :exclusions [ring/ring-core]]]
   :repl-options {:init-ns clojurenew.core}
   :main clojurenew.core)
