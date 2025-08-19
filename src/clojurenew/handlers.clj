@@ -96,7 +96,7 @@
     (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
 (defn action-create-news [request]
-  (let [{:keys [title content photo]} (:params request)
+  (let [{:keys [title content photo]} (:form-params request)
         tempfile (:tempfile photo)
         filename (:filename photo)
         target-path (str "resources/public/uploads/" filename)]
@@ -112,7 +112,7 @@
             (response/status 303)))
       ;; Si les champs sont manquants
       (response/content-type
-       (response/response (render-html "index.html" "ajouter une news" (form-news-page request)))
+       (response/response (render-html "index.html" "(il y avait une erreur) ajouter une news" (form-news-page request)))
        "text/html"))))
 
 
