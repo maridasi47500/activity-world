@@ -3,6 +3,7 @@
 /checkouts
 profiles.clj
 pom.xml
+dev-resources/
 pom.xml.asc
 *.jar
 *.class
