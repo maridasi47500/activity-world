@@ -19,6 +19,7 @@
                  [ring/ring-defaults "0.3.4"]
                  [clojure-interop/javax.imageio "1.0.5"]
                  [clojure-interop/java.security "1.0.5"]
+                 [aleph "0.4.7"]
                  [clojure-interop/java.util "1.0.5"]
                  [hiccup "2.0.0"]
                  [gorillalabs/ring-anti-forgery-strategies "1.2.0"]

@@ -55,6 +55,28 @@
    [:title title]])
 
 
+(defn my-form-news-page
+  [_]
+  (hic-p/html5
+    (gen-page-head "Json Parser Home.")
+    [:h1 "Welcome."]
+    [:p "Json Web App."]
+     (hic-e/link-to "/action_create_news" "accueil world activity")
+    [:p (hf/form-to {:enctype "multipart/form-data"} [:post "/action_create_news"]
+    [:div
+         (hf/label "title" "title")    
+         (hf/text-field "title")    
+      ]
+    [:div
+         (hf/label "photo" "photo")    
+         (hf/file-upload "photo")    
+      ]
+    [:div
+         (hf/label "content" "content")    
+         (hf/text-area "content")    
+      ]
+         (anti-forgery-field)
+         (hf/submit-button "Submit"))]))
 (defn form-news-page
   [req]
   (hic-p/html5
@@ -62,7 +84,7 @@
     [:h1 "Welcome."]
     [:p "Json Web App."]
      (hic-e/link-to "/action_create_news" "accueil world activity")
-    [:p (hf/form-to [:post "/action_create_news"]
+    [:p (hf/form-to {:enctype "multipart/form-data"} [:post "/action_create_news"]
     [:div
          (hf/label "title" "title")    
          (hf/text-field "title")    
@@ -96,7 +118,7 @@
     (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
 (defn action-create-news [request]
-  (let [{:keys [title content photo]} (:form-params request)
+  (let [{:keys [title content photo __anti-forgery-token]} request;(:params request)
         tempfile (:tempfile photo)
         filename (:filename photo)
         target-path (str "resources/public/uploads/" filename)]
@@ -113,6 +135,7 @@
       ;; Si les champs sont manquants
       (response/content-type
        (response/response (render-html "index.html" "(il y avait une erreur) ajouter une news" (form-news-page request)))
+       ;(response/response (render-html "index.html" "(il y avait une erreur) ajouter une news" (my-form-news-page)))
        "text/html"))))
 
 

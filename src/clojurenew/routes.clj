@@ -2,16 +2,21 @@
   "Compojure routes for Activity World (routes unchanged for view compatibility)."
   (:require [compojure.core :refer :all]
             [clojurenew.handlers :as h]
-            [compojure.route :as route]))
+            [compojure.route :as route]
+            [ring.middleware.multipart-params :as mp]
+))
 
 (defroutes app-protected-routes
   ;(GET "/poster_news" [] h/poster-news)
   (POST "/action_create_news" req (h/action-create-news req)))
 
+
 (defroutes app-routes
   (GET "/clear-session" [] h/clear-session)
   (GET "/poster_news" req (h/poster-news req))
-  (POST "/action_create_news" [request] (h/action-create-news request))
+;(mp/wrap-multipart-params 
+  ;(POST "/action_create_news" {params :params} (h/action-create-news (get params "title") (get params "photo") (get params "content"))))
+  (POST "/action-create-news" {params :params} (h/action-create-news params))
 
   ;; CSS and JS (if needed, adapt as per your previous code)
   (GET "/app.css" [] (h/render-css "Show my activity world" "app.css"))

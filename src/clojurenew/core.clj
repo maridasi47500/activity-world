@@ -2,15 +2,16 @@
   (:require [compojure.core :refer [defroutes GET POST]]
             [compojure.route :as route]
             [ring.util.response :as response]
-            [org.httpkit.server :refer [run-server]]
-            [clojurenew.db :as db]
+            [org.httpkit.server :refer [run-server]] [clojurenew.db :as db]
             [clojurenew.routes :refer [app-routes app-protected-routes]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.params :as ring-params]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [ring.middleware.multipart-params.byte-array :refer [byte-array-store]]
             [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.session.cookie :refer [cookie-store]]
+            [aleph.http.client-middleware :as ahclient]
             [hiccup.core :refer [html]]
          
          [ring.middleware.anti-forgery.signed-token :as signed-token]
@@ -39,7 +40,7 @@
   (println (str request :form-params))
   {:status 403
    :headers {"Content-Type" "text/html"}
-   :body (str request "<h1>handler Missing anti-forgery token</h1>")})
+   :body (str "<h3>test for a post route : title of news added</h3>" (get (:params request) "title") "<h3>title</h3>"  "<h3>photo content</h3>" (get (:params request) "photo") "<h3>photo</h3>" "<hr><br>" request "<h1>handler Missing anti-forgery token</h1>")})
 
 
 
@@ -63,16 +64,19 @@
       (wrap-defaults (-> site-defaults
 
 )) ;a 16 long bytes string
-      (wrap-session)
+      wrap-session
 
       ;(wrap-anti-forgery {:safe-header "X-CSRF-Protection"})
       ;(wrap-anti-forgery {:read-token get-custom-token})
       ;(wrap-anti-forgery {:error-response custom-error-response})
-      ;(wrap-anti-forgery {:error-handler custom-error-handler})
+      (wrap-anti-forgery {:error-handler custom-error-handler})
       ;(wrap-anti-forgery handler {:strategy custom-strategy})
       ;(wrap-anti-forgery handler {:strategy encrypted-token-strategy})
 
-      (wrap-multipart-params {:store (byte-array-store)})))
+      (ahclient/wrap-form-params)
+      (ring-params/wrap-params)
+      (wrap-multipart-params {:store (byte-array-store)})
+))
 
 (defn -main
   "Main entrypoint: ensure DB/tables, start HTTP server."
