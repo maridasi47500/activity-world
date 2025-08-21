@@ -103,6 +103,8 @@
 
 
 (defn poster-news [request]
+  (println (str request))
+  (println (:anti-forgery-token request))
   (response/content-type
     (response/response (render-html "index.html" "ajouter une news" (form-news-page request)))
     "text/html"))
@@ -118,7 +120,7 @@
     (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
 (defn action-create-news [request]
-  (let [{:keys [title content photo __anti-forgery-token]} request;(:params request)
+  (let [{:keys [title content photo __anti-forgery-token]} (:multipart-params request)
         tempfile (:tempfile photo)
         filename (:filename photo)
         target-path (str "resources/public/uploads/" filename)]

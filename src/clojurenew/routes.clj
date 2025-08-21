@@ -4,11 +4,21 @@
             [clojurenew.handlers :as h]
             [compojure.route :as route]
             [ring.middleware.multipart-params :as mp]
+            [ring.middleware.anti-forgery :refer [*anti-forgery-token* wrap-anti-forgery]]
 ))
 
 (defroutes app-protected-routes
   ;(GET "/poster_news" [] h/poster-news)
   (POST "/action_create_news" req (h/action-create-news req)))
+
+(defn custom-error-handler [request]
+  (println (get-in request [:headers "x-forgery-token"]))
+  ;(println (str request :form-params))
+  (println "CSRF token missing or invalid for request:" (:uri request))
+  {:status 403
+   :headers {"Content-Type" "text/html"}
+   :body (str "<p>current token </p>" *anti-forgery-token* "<hr>" (get (:params request) "__anti-forgery-token") "<h3>test for a post route : title of news added</h3>" "<h1>403 Forbidden</h1><p>CSRF protection triggered.</p>" (get (:params request) "title") "<h3>title</h3>"  "<h3>photo content</h3>" (get (:params request) "photo") "<h3>photo</h3>" "<hr><br>" request "<h1>handler Missing anti-forgery token</h1>")})
+
 
 
 (defroutes app-routes
@@ -16,7 +26,8 @@
   (GET "/poster_news" req (h/poster-news req))
 ;(mp/wrap-multipart-params 
   ;(POST "/action_create_news" {params :params} (h/action-create-news (get params "title") (get params "photo") (get params "content"))))
-  (POST "/action-create-news" {params :params} (h/action-create-news params))
+  ;(POST "/action-create-news" {:session {:store (cookie-store {:key *anti-forgery-token*})}} {params :params} (h/action-create-news params))
+  (POST "/action-create-news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler}))
 
   ;; CSS and JS (if needed, adapt as per your previous code)
   (GET "/app.css" [] (h/render-css "Show my activity world" "app.css"))
