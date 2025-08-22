@@ -84,7 +84,7 @@
     [:h1 "Welcome."]
     [:p "Json Web App."]
      (hic-e/link-to "/action_create_news" "accueil world activity")
-    [:p (hf/form-to {:enctype "multipart/form-data"} [:post "/action_create_news"]
+    [:p (hf/form-to {:id "form-create-news", :enctype "multipart/form-data"} [:post "/action_create_news"]
     [:div
          (hf/label "title" "title")    
          (hf/text-field "title")    
