@@ -22,6 +22,12 @@
     (if content
       (format tpl title content)
       ))))
+(defn render-json
+  "Render an json template from resources."
+  [template]
+  (let [tpl (slurp (io/resource template))]
+      tpl)
+      )
 
 (defn my-html
   "Render an HTML template from resources."
@@ -132,13 +138,17 @@
         (db/insert-news! {"title" title
                           "photo" filename
                           "content" content})
-        (-> (response/redirect "/voir_news")
-            (response/status 303)))
+        (-> 
+      (response/content-type
+       (response/response (render-json "index.json" ))
+       "application/json")
+
+)
       ;; Si les champs sont manquants
       (response/content-type
        (response/response (render-html "index.html" "(il y avait une erreur) ajouter une news" (form-news-page request)))
-       ;(response/response (render-html "index.html" "(il y avait une erreur) ajouter une news" (my-form-news-page)))
-       "text/html"))))
+       "text/html")
+)))
 
 
 
