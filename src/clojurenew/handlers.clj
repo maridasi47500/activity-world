@@ -139,12 +139,11 @@
         (db/insert-news! {"title" title
                           "photo" filename
                           "content" content})
-        (-> 
       (response/content-type
        (response/response (render-json "index.json" ))
        "application/json")
 
-))
+)
       ;; Si les champs sont manquants
       (response/content-type
        (response/response (render-json "myform.json" ))
