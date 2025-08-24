@@ -2,7 +2,7 @@ var now = new Date(),
     // minimum date the user can choose, in this case now and in the future
     minDate = now.toISOString().substring(0,10);
 
-$('#form_date').prop('min', minDate);
+//$('#form_date').prop('min', minDate);
 $(function(){
 //$('.carousel').carousel();
 
@@ -17,7 +17,11 @@ return false;
     type: $(this).attr("method"),
     //request [:headers "x-forgery-token"]))
     beforeSend: function(request) {
-      request.setRequestHeader("x-forgery-token", $("[name='__anti-forgery-token']").val());
+         //$('.loader').show();
+      var hey= $("[name='__anti-forgery-token']").val();
+      console.log("how are you there" + hey);
+      request.setRequestHeader("x-forgery-token", hey);
+      request.setRequestHeader("x-csrf-protection", hey);
     },
 
 
@@ -38,12 +42,9 @@ return false;
 	    if (data.redirect){
 	    window.location=data.redirect;
 	    }else{
-	    window.location="/";
+	    alert(String(data));
 	    }
 },
-	  beforeSend: function(){
-		         $('.loader').show()
-		     },
 	  complete: function(){
 		         $('.loader').hide();
 		    },

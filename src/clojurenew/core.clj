@@ -78,7 +78,7 @@
       ;(wrap-anti-forgery {:safe-header "X-CSRF-Protection"})
       ;(wrap-anti-forgery {:read-token get-custom-token})
       ;(wrap-anti-forgery {:error-response custom-error-response})
-      (wrap-anti-forgery {:error-handler custom-error-handler})
+      (wrap-anti-forgery {:safe-header "X-CSRF-Protection", :error-handler custom-error-handler})
       ;(wrap-anti-forgery handler {:strategy custom-strategy})
       ;(wrap-anti-forgery handler {:strategy encrypted-token-strategy})
       (ahclient/wrap-form-params)

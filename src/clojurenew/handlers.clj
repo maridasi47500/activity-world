@@ -5,7 +5,8 @@
   (:import [javax.imageio ImageIO])
   (:require [hiccup.page :as hic-p]
             [hiccup.element :as hic-e]
-            [ring.util.anti-forgery :refer [anti-forgery-field]]
+            [hiccup.def :as hic-d]
+            [hiccup2.core :as hic-c]
             [hiccup.form :as hf]
             [clojurenew.db :as db]
             [clojure.java.io :as io]
@@ -26,6 +27,7 @@
   "Render an json template from resources."
   [template]
   (let [tpl (slurp (io/resource template))]
+      (println tpl)
       tpl)
       )
 
@@ -63,8 +65,8 @@
 
 (defn my-form-news-page
   [_]
-  (hic-p/html5
-    (gen-page-head "Json Parser Home.")
+  ;(;hic-p/html5
+    ;(gen-page-head "Json Parser Home.")
     [:h1 "Welcome."]
     [:p "Json Web App."]
      (hic-e/link-to "/action_create_news" "accueil world activity")
@@ -82,15 +84,10 @@
          (hf/text-area "content")    
       ]
          (anti-forgery-field)
-         (hf/submit-button "Submit"))]))
+         (hf/submit-button "Submit"))]);)
 (defn form-news-page
   [req]
-  (hic-p/html5
-    (gen-page-head "Json Parser Home.")
-    [:h1 "Welcome."]
-    [:p "Json Web App."]
-     (hic-e/link-to "/action_create_news" "accueil world activity")
-    [:p (hf/form-to {:id "form-create-news", :enctype "multipart/form-data"} [:post "/action_create_news"]
+    (str/replace (hic-p/html5 [:div (hf/form-to {:id "form-create-news", :enctype "multipart/form-data"} [:post "/action_create_news"]
     [:div
          (hf/label "title" "title")    
          (hf/text-field "title")    
@@ -103,8 +100,11 @@
          (hf/label "content" "content")    
          (hf/text-area "content")    
       ]
+    [:div
          (anti-forgery-field)
-         (hf/submit-button "Submit"))]))
+      ]
+         (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+                 )
 
 
 
@@ -126,6 +126,7 @@
     (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
 (defn action-create-news [request]
+  (println "yeah")
   (let [{:keys [title content photo __anti-forgery-token]} (:multipart-params request)
         tempfile (:tempfile photo)
         filename (:filename photo)
@@ -143,11 +144,11 @@
        (response/response (render-json "index.json" ))
        "application/json")
 
-)
+))
       ;; Si les champs sont manquants
       (response/content-type
-       (response/response (render-html "index.html" "(il y avait une erreur) ajouter une news" (form-news-page request)))
-       "text/html")
+       (response/response (render-json "myform.json" ))
+       "application/json")
 )))
 
 
@@ -162,7 +163,6 @@
         (slurp (io/resource "_reservation.html"))))
     "text/html"))
 (defn render-pic [hey]
-    ;    (slurp (io/resource hey)))
     (let [image (ImageIO/read (io/resource hey))
       image-file (java.io.File. (io/resource hey))]
   (ImageIO/write image "jpg" image-file)))
