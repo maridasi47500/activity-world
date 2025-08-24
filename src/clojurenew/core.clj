@@ -3,7 +3,7 @@
             [compojure.route :as route]
             [ring.util.response :as response]
             [org.httpkit.server :refer [run-server]] [clojurenew.db :as db]
-            [clojurenew.routes :refer [app-routes app-protected-routes]]
+            [clojurenew.routes :refer [app-routes]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.params :as ring-params]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]

@@ -7,9 +7,6 @@
             [ring.middleware.anti-forgery :refer [*anti-forgery-token* wrap-anti-forgery]]
 ))
 
-(defroutes app-protected-routes
-  ;(GET "/poster_news" [] h/poster-news)
-  (POST "/action_create_news" req (h/action-create-news req)))
 
 (defn custom-error-handler [request]
   (println (get-in request [:headers "x-forgery-token"]))
@@ -25,9 +22,7 @@
   (GET "/clear-session" [] h/clear-session)
   (GET "/poster_news" req (h/poster-news req))
 ;(mp/wrap-multipart-params 
-  ;(POST "/action_create_news" {params :params} (h/action-create-news (get params "title") (get params "photo") (get params "content"))))
-  ;(POST "/action-create-news" {:session {:store (cookie-store {:key *anti-forgery-token*})}} {params :params} (h/action-create-news params))
-  (POST "/action-create-news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler}))
+  (POST "/action_create_news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler}))
 
   ;; CSS and JS (if needed, adapt as per your previous code)
   (GET "/app.css" [] (h/render-css "Show my activity world" "app.css"))
