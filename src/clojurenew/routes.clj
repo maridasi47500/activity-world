@@ -20,9 +20,10 @@
 
 (defroutes app-routes
   (GET "/clear-session" [] h/clear-session)
-  (GET "/poster_news" req (h/poster-news req))
+  (GET "/poster_news"  [req] (h/poster-news req))
 ;(mp/wrap-multipart-params 
-  (POST "/action_create_news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler}))
+  ;(POST "/action_create_news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler}))
+  (POST "/action_create_news" [params] (h/action-create-news params) )
 
   ;; CSS and JS (if needed, adapt as per your previous code)
   (GET "/app.css" [] (h/render-css "Show my activity world" "app.css"))

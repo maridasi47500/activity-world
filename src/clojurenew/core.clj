@@ -75,6 +75,8 @@
 
 ;a 16 long bytes string
 
+      (ring-params/wrap-params)
+      (wrap-multipart-params {:store (byte-array-store)})
       ;(wrap-anti-forgery {:safe-header "X-CSRF-Protection"})
       ;(wrap-anti-forgery {:read-token get-custom-token})
       ;(wrap-anti-forgery {:error-response custom-error-response})
@@ -82,11 +84,11 @@
       ;(wrap-anti-forgery handler {:strategy custom-strategy})
       ;(wrap-anti-forgery handler {:strategy encrypted-token-strategy})
       (ahclient/wrap-form-params)
-      (ring-params/wrap-params)
-      (wrap-multipart-params {:store (byte-array-store)})
+
 
 
 ))
+
 
 (defn -main
   "Main entrypoint: ensure DB/tables, start HTTP server."

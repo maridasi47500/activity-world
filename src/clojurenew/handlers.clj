@@ -26,6 +26,7 @@
 (defn render-json
   "Render an json template from resources."
   [template]
+  (println template)
   (let [tpl (slurp (io/resource template))]
       (println tpl)
       tpl)
@@ -125,30 +126,36 @@
   (response/content-type
     (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
+
 (defn action-create-news [request]
+  (println (str request))
+  (println "Headers:" (:headers request))
+  (println "Multipart params:" (:multipart-params request))
+  (println "Form params:" (:form-params request))
+  (println "Params:" (:params request))
   (println "yeah")
   (let [{:keys [title content photo __anti-forgery-token]} (:multipart-params request)
         tempfile (:tempfile photo)
         filename (:filename photo)
         target-path (str "resources/public/uploads/" filename)]
-    (if (and title content photo)
+    (if (and title content photo tempfile filename)
       (do
-        ;; Copie le fichier dans le dossier resources/public/uploads
+        ;; Crée les dossiers si besoin
+        (clojure.java.io/make-parents target-path)
+        ;; Copie le fichier
         (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
-        ;; Enregistre les infos dans la DB
+        ;; Enregistre en base
         (db/insert-news! {"title" title
                           "photo" filename
                           "content" content})
+        ;; Retourne une réponse JSON
+        (response/content-type
+         (response/response (render-json "index.json"))
+         "application/json"))
+      ;; Champs manquants
       (response/content-type
-       (response/response (render-json "index.json" ))
-       "application/json")
-
-)
-      ;; Si les champs sont manquants
-      (response/content-type
-       (response/response (render-json "myform.json" ))
-       "application/json")
-)))
+       (response/response (render-json "myform.json"))
+       "application/json"))))
 
 
 

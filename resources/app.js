@@ -7,8 +7,10 @@ $(function(){
 //$('.carousel').carousel();
 
 $('#form-create-news').on('submit', function () {
-  if (window.filesize > 1024*5) {
-    alert('max upload size is 5k');
+  var fd = new FormData($(this)[0]);    
+
+  if (window.filesize > 1024*1024*10) {
+    alert('max upload size is 10mb');
 return false;
   }
   $.ajax({
@@ -20,20 +22,16 @@ return false;
          //$('.loader').show();
       var hey= $("[name='__anti-forgery-token']").val();
       console.log("how are you there" + hey);
-      request.setRequestHeader("x-forgery-token", hey);
       request.setRequestHeader("x-csrf-protection", hey);
     },
-
-
     // Form data
-    data: new FormData($(this)[0]),
-
+    data: fd,
     // Tell jQuery not to process data or worry about content-type
     // You *must* include these options!
     cache: false,
     contentType: false,
-    processData: false,
 
+    processData: false,
     // Custom XMLHttpRequest
     success: function (data) {
 	    console.log("HEY")
@@ -66,6 +64,52 @@ return false;
   });
 	return false;
   });
+/*$('#form-create-news').on('submit', function (e) {
+  e.preventDefault(); // évite le submit classique
+
+  var file = $("[name=photo]")[0].files[0];
+  if (file.size > 1024 * 5) {
+    alert('max upload size is 5k');
+    return false;
+  }
+
+  var fd = new FormData(this); // pas besoin de append si le champ est dans le form
+
+  $.ajax({
+    url: $(this).attr("action"),
+    type: $(this).attr("method"),
+    beforeSend: function(request) {
+      var token = $("[name='__anti-forgery-token']").val();
+      request.setRequestHeader("x-csrf-protection", token); // adapte selon ton backend
+    },
+    data: fd,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: function (data) {
+      if (data.redirect) {
+        window.location = data.redirect;
+      } else {
+        alert(String(data));
+      }
+    },
+    complete: function () {
+      $('.loader').hide();
+    },
+    xhr: function () {
+      var myXhr = $.ajaxSettings.xhr();
+      if (myXhr.upload) {
+        myXhr.upload.addEventListener('progress', function (e) {
+          if (e.lengthComputable) {
+            $('progress').attr({ value: e.loaded, max: e.total });
+          }
+        }, false);
+      }
+      return myXhr;
+    }
+  });
+});*/
+
 
   
 });
