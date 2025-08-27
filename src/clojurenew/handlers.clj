@@ -70,6 +70,9 @@
     ;(gen-page-head "Json Parser Home.")
     [:h1 "Welcome."]
     [:p "Json Web App."]
+    [:div
+         (anti-forgery-field)
+      ]
      (hic-e/link-to "/action_create_news" "accueil world activity")
     [:p (hf/form-to {:enctype "multipart/form-data"} [:post "/action_create_news"]
     [:div
@@ -84,11 +87,24 @@
          (hf/label "content" "content")    
          (hf/text-area "content")    
       ]
-         (anti-forgery-field)
+
          (hf/submit-button "Submit"))]);)
 (defn form-news-page
   [req]
-    (str/replace (hic-p/html5 [:div (hf/form-to {:id "form-create-news", :enctype "multipart/form-data"} [:post "/action_create_news"]
+    (str/replace (hic-p/html5 
+
+
+
+
+
+(hf/form-to {:id "form-create-news", :enctype "multipart/form-data"} [:post "/action_create_news"]
+
+[:div (hf/form-to {:id "form-create-news"} [:post "/action_create_news"]
+    [:div
+         (anti-forgery-field)
+      ]
+
+
     [:div
          (hf/label "title" "title")    
          (hf/text-field "title")    
@@ -101,10 +117,7 @@
          (hf/label "content" "content")    
          (hf/text-area "content")    
       ]
-    [:div
-         (anti-forgery-field)
-      ]
-         (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+         (hf/submit-button "Submit"))])) #"(<html>|<\/html>)" "")
                  )
 
 
@@ -128,7 +141,7 @@
     "text/html"))
 
 (defn action-create-news [request]
-  (println (str request))
+  (println "request" (str request))
   (println "Headers:" (:headers request))
   (println "Multipart params:" (:multipart-params request))
   (println "Form params:" (:form-params request))
@@ -215,6 +228,6 @@
         (response/status 303))))
 
 (defn not-found-handler [_]
-  (-> (response/response (render-html "404.html" "hey" "hi"))
+  (-> (response/response (str (render-html "404.html" "hey" "hi") _))
       (response/status 404)
       (response/content-type "text/html")))

@@ -18,12 +18,12 @@ return false;
     url: $(this).attr("action"),
     type: $(this).attr("method"),
     //request [:headers "x-forgery-token"]))
-    beforeSend: function(request) {
-         //$('.loader').show();
-      var hey= $("[name='__anti-forgery-token']").val();
-      console.log("how are you there" + hey);
-      request.setRequestHeader("x-csrf-protection", hey);
-    },
+    //beforeSend: function(request) {
+    //     //$('.loader').show();
+    //  var hey= $("[name='__anti-forgery-token']").val();
+    //  console.log("how are you there" + hey);
+    //  request.setRequestHeader("X-CSRF-Protection", hey);
+    //},
     // Form data
     data: fd,
     // Tell jQuery not to process data or worry about content-type
@@ -64,6 +64,7 @@ return false;
   });
 	return false;
   });
+$('#photo').on('change', function() { window.filesize = this.files[0].size; });
 /*$('#form-create-news').on('submit', function (e) {
   e.preventDefault(); // évite le submit classique
 
