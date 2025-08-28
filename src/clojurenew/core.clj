@@ -65,31 +65,50 @@
 (def anti-forgery-handler
   "hey"
   *anti-forgery-token*)
+
 (def custom-defaults
   (-> site-defaults
       (assoc-in [:security :anti-forgery] false))) ; disable built-in anti-forgery
+(defn print-request-middleware-begin [handler]
+  (fn [request]
+    (println "--- Incoming Request ---")
+    (println "Request at the begin of middleware stack:" request)
+    (let [response (handler request)]
+      (println "--- Outgoing Response ---")
+      response)))
+(defn print-request-middleware-end [handler]
+  (fn [request]
+    (println "--- Incoming Request ---")
+    (println "Request at the end of middleware stack:" request)
+    (let [response (handler request)]
+      (println "--- Outgoing Response ---")
+      response)))
+(defn enforce-utf8-encoding [handler]
+  (fn [request]
+    (let [req (assoc request :character-encoding "UTF-8")]
+      (handler req))))
+
 (def app
-
   (-> app-routes
-
-
-      ;(wrap-defaults
-      ;  (assoc site-defaults
-      ;      :params
-      ;      {:multipart {:store (some-byte-array-store/byte-array-store)
-      ;                 :max-size (* 10 1024 1024)}}
-      ;      ;; Disable default param parsing to avoid conflict
-      ;      ;(assoc-in [:params :multipart] false)
-      ;      ;(assoc-in [:params :urlencoded] false)
-      ; )); ce handler ou tous autre handler
-      (wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
-                       :max-size (* 10 1024 1024)}) ;wrap-multipart-params middleware must be placed early in the pipeline to correctly read the raw multipart/form-data from the request
-      (wrap-session) ;before wrap-anti-forgery so that the anti-forgery middleware can store and retrieve the token from the session
-      (ring-params/wrap-params)
-      (ahclient/wrap-form-params)
-      (wrap-anti-forgery {;:safe-header "X-CSRF-Protection" 
-                          :error-handler custom-error-handler}) ;ring.middleware.anti-forgery/wrap-anti-forgery must be placed after wrap-params and wrap-multipart-params so it can access the token from the form parameters
-))
+      print-request-middleware-begin
+      ;enforce-utf8-encoding
+      (wrap-defaults
+        (-> site-defaults
+          ;(assoc-in [:security :anti-forgery]
+          ;          {:safe-header "X-CSRF-Protection"})
+          (assoc-in [:params :multipart]
+                       {:store (some-byte-array-store/byte-array-store)
+                         :max-size (* 10 1024 1024)})))
+      print-request-middleware-end))
+        
+       ; ce handler ou tous autre handler
+      ;(wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
+      ;                 :max-size (* 10 1024 1024)}) ;wrap-multipart-params middleware must be placed early in the pipeline to correctly read the raw multipart/form-data from the request
+      ;(wrap-session) ;before wrap-anti-forgery so that the anti-forgery middleware can store and retrieve the token from the session
+      ;(ring-params/wrap-params)
+      ;(ahclient/wrap-form-params)
+      ;(wrap-anti-forgery {:safe-header "X-CSRF-Protection" 
+      ;                    :error-handler custom-error-handler}) ;ring.middleware.anti-forgery/wrap-anti-forgery must be placed after wrap-params and wrap-multipart-params so it can access the token from the form parameters
 
       ;(wrap-anti-forgery {;:safe-header "X-CSRF-Protection" 
       ;                    :error-handler custom-error-handler})))
