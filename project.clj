@@ -22,6 +22,7 @@
                  [clojure-interop/java.security "1.0.5"]
                  [aleph "0.4.7"]
                  [clojure-interop/java.util "1.0.5"]
+                 [org.clojure/data.json "2.5.1"]
                  [hiccup "2.0.0"]
                  [gorillalabs/ring-anti-forgery-strategies "1.2.0"]
                  [compojure "1.7.1" :exclusions [ring/ring-core]]]

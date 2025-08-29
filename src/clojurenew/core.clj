@@ -2,6 +2,8 @@
   (:require [compojure.core :refer [defroutes GET POST]]
             [compojure.route :as route]
             [ring.util.response :as response]
+            [clojure.data.json :as json]
+            [clojure.string :as str]
             [org.httpkit.server :refer [run-server]] [clojurenew.db :as db]
             [clojurenew.routes :refer [app-routes]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
@@ -69,17 +71,36 @@
 (def custom-defaults
   (-> site-defaults
       (assoc-in [:security :anti-forgery] false))) ; disable built-in anti-forgery
+(defn print-request-middleware [handler]
+  (fn [request]
+    (println "--- Incoming Request ---")
+    (println "keys request : " (keys request))
+    (println
+      (str
+        (clojure.string/upper-case
+          (clojure.string/replace (str (:request-method request)) ":" ""))
+        " "
+        (:uri request)
+        " "))
+    (println "Params:" (:params request))
+    (println "Multipart params:" (:multipart-params request))
+    (println "Form params:" (:form-params request))
+    (println "Headers:" (:headers request))
+    (println "--- End of Middleware ---")
+    (handler request))) ; ← très important : transmettre la requête au handler suivant
+
 (defn print-request-middleware-begin [handler]
   (fn [request]
     (println "--- Incoming Request ---")
-    (println "Request at the begin of middleware stack:" request)
+    (println "params at the begin of middleware stack:" (:params request))
     (let [response (handler request)]
       (println "--- Outgoing Response ---")
       response)))
 (defn print-request-middleware-end [handler]
   (fn [request]
+    ;(println (:params ))
     (println "--- Incoming Request ---")
-    (println "Request at the end of middleware stack:" request)
+    (println "params at the end of middleware stack:" (:params request))
     (let [response (handler request)]
       (println "--- Outgoing Response ---")
       response)))
@@ -88,25 +109,91 @@
     (let [req (assoc request :character-encoding "UTF-8")]
       (handler req))))
 
+;(def app
+;  (-> app-routes
+;
+;      ;enforce-utf8-encoding
+;      (wrap-defaults
+;        (-> site-defaults
+;          ;(assoc-in [:security :anti-forgery]
+;          ;          {:safe-header "X-CSRF-Protection"})
+;          (assoc-in [:params :multipart]
+;                       {:store (some-byte-array-store/byte-array-store)
+;                         :max-size (* 10 1024 1024)})))
+;      print-request-middleware-begin
+;      print-request-middleware-end
+;))
+;(:b {:a 1 :b 6})
+
+
+(defn colorize [label color]
+  (str "\u001B[" color "m" label "\u001B[0m"))
+
+(defn print-debug-json [request]
+  (let [debug-map {:method         (str/upper-case (name (:request-method request)))
+                   :uri            (:uri request)
+                   :headers        (:headers request)
+                   :params         (:params request)
+                   :form-params    (:form-params request)
+                   :multipart-params (:multipart-params request)}]
+    (println (colorize "\n--- Incoming Request (Debug JSON) ---" "36")) ; cyan
+    (println (json/write-str debug-map :indent true))
+    (println (colorize "--- End of Debug ---\n" "36"))
+    ))
+(defn wrap-debug-handler [handler]
+  (fn [request]
+
+    (println (colorize "\n--- Incoming Request ---" "36"))
+    (println (colorize (json/write-str {:params (:params request)} :indent true) "33")) ; jaune
+    (println "Keys in request:" (keys request))
+    (println "Method:" (:request-method request))
+    (println "URI:" (:uri request))
+    (println "Headers:" (:headers request))
+    (println "Params:" (:params request))
+    (println "Form params:" (:form-params request))
+    (println "Multipart params:" (:multipart-params request))
+    (println "Body class:" (when-let [b (:body request)] (class b)))
+    (println (colorize "--- End of Middleware ---\n" "36"))
+    (handler request)))
+
+
+
 (def app
   (-> app-routes
-      print-request-middleware-begin
-      ;enforce-utf8-encoding
-      (wrap-defaults
-        (-> site-defaults
-          ;(assoc-in [:security :anti-forgery]
-          ;          {:safe-header "X-CSRF-Protection"})
-          (assoc-in [:params :multipart]
-                       {:store (some-byte-array-store/byte-array-store)
-                         :max-size (* 10 1024 1024)})))
-      print-request-middleware-end))
+      ;; Logging initial
+      print-request-middleware
+
+      ;;; Multipart doit venir très tôt
+      (wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
+                              :max-size (* 10 1024 1024)})
+
+      ;;; Parsing des paramètres
+      ring-params/wrap-params
+      ;ahclient/wrap-form-params
+
+      ;;; Session avant anti-forgery
+      ;(wrap-session)
+
+      ;; Protection CSRF
+      (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
+                          :error-handler custom-error-handler})
+
+      ;; Logging final
+      print-request-middleware 
+
+      wrap-debug-handler
+
+
+))
+
+
+
         
        ; ce handler ou tous autre handler
       ;(wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
       ;                 :max-size (* 10 1024 1024)}) ;wrap-multipart-params middleware must be placed early in the pipeline to correctly read the raw multipart/form-data from the request
       ;(wrap-session) ;before wrap-anti-forgery so that the anti-forgery middleware can store and retrieve the token from the session
-      ;(ring-params/wrap-params)
-      ;(ahclient/wrap-form-params)
+
       ;(wrap-anti-forgery {:safe-header "X-CSRF-Protection" 
       ;                    :error-handler custom-error-handler}) ;ring.middleware.anti-forgery/wrap-anti-forgery must be placed after wrap-params and wrap-multipart-params so it can access the token from the form parameters
 
