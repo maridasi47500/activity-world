@@ -148,47 +148,59 @@
   (fn [request]
 
     (println (colorize "\n--- Incoming Request ---" "36"))
+    (println (colorize (str "Method:" (:request-method request)) "37"))
+    (println (colorize (str "URI:" (:uri request)) "37"))
+    (println "Params:" (:params request))
     (println (colorize (json/write-str {:params (:params request)} :indent true) "33")) ; jaune
     (println "Keys in request:" (keys request))
-    (println "Method:" (:request-method request))
-    (println "URI:" (:uri request))
+
     (println "Headers:" (:headers request))
-    (println "Params:" (:params request))
+
     (println "Form params:" (:form-params request))
     (println "Multipart params:" (:multipart-params request))
     (println "Body class:" (when-let [b (:body request)] (class b)))
     (println (colorize "--- End of Middleware ---\n" "36"))
     (handler request)))
 
-
-
 (def app
-  (-> app-routes
-      ;; Logging initial
-      ;print-request-middleware
+(-> app-routes
+    wrap-multipart-params
+    ring-params/wrap-params
+    ;ring-params/wrap-keyword-params
+    wrap-session
+    (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
+                        :error-handler custom-error-handler})
+    print-request-middleware
+    wrap-debug-handler)
+)
 
-      ;;; Multipart doit venir très tôt
-      (wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
-                              :max-size (* 10 1024 1024)})
-
-      ;;; Parsing des paramètres
-      ring-params/wrap-params
-      ;ahclient/wrap-form-params
-
-      ;;; Session avant anti-forgery
-      ;(wrap-session)
-
-      ;; Protection CSRF
-      (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
-                          :error-handler custom-error-handler})
-
-      ;; Logging final
-      print-request-middleware 
-
-      wrap-debug-handler
-
-
-))
+;(def app
+;  (-> app-routes
+;      ;; Logging initial
+;      ;print-request-middleware
+;
+;      ;;; Multipart doit venir très tôt
+;      (wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
+;                              :max-size (* 10 1024 1024)})
+;
+;      ;;; Parsing des paramètres
+;      ring-params/wrap-params
+;      ;ahclient/wrap-form-params
+;
+;      ;;; Session avant anti-forgery
+;      ;(wrap-session)
+;
+;      ;; Protection CSRF
+;      (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
+;                          :error-handler custom-error-handler})
+;
+;      ;; Logging final
+;      print-request-middleware 
+;
+;      wrap-debug-handler
+;
+;
+;))
 
 
 
