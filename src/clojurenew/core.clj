@@ -64,6 +64,10 @@
 
 
 
+(defn colorize [label color]
+  (str "\u001B[" color "m" label "\u001B[0m"))
+
+
 (def anti-forgery-handler
   "hey"
   *anti-forgery-token*)
@@ -73,16 +77,19 @@
       (assoc-in [:security :anti-forgery] false))) ; disable built-in anti-forgery
 (defn print-request-middleware [handler]
   (fn [request]
+
     (println "--- Incoming Request ---")
-    (println "keys request : " (keys request))
     (println
-      (str
+      (colorize (str
         (clojure.string/upper-case
           (clojure.string/replace (str (:request-method request)) ":" ""))
         " "
         (:uri request)
-        " "))
+        " ") "32"))
     (println "Params:" (:params request))
+    (println "keys request : " (keys request))
+
+
     (println "Multipart params:" (:multipart-params request))
     (println "Form params:" (:form-params request))
     (println "Headers:" (:headers request))
@@ -126,9 +133,6 @@
 ;(:b {:a 1 :b 6})
 
 
-(defn colorize [label color]
-  (str "\u001B[" color "m" label "\u001B[0m"))
-
 (defn print-debug-json [request]
   (let [debug-map {:method         (str/upper-case (name (:request-method request)))
                    :uri            (:uri request)
@@ -161,7 +165,7 @@
 (def app
   (-> app-routes
       ;; Logging initial
-      print-request-middleware
+      ;print-request-middleware
 
       ;;; Multipart doit venir très tôt
       (wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
