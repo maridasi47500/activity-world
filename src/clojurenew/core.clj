@@ -164,14 +164,15 @@
 
 (def app
 (-> app-routes
-    wrap-multipart-params
-    ring-params/wrap-params
-    ;ring-params/wrap-keyword-params
-    wrap-session
+    ;wrap-multipart-params
+    ;ring-params/wrap-params
+    ;;ring-params/wrap-keyword-params
+    ;wrap-session
     (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
                         :error-handler custom-error-handler})
     print-request-middleware
-    wrap-debug-handler)
+    wrap-debug-handler
+)
 )
 
 ;(def app
