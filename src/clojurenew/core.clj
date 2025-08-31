@@ -8,12 +8,17 @@
             [clojurenew.routes :refer [app-routes]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.params :as ring-params]
-            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.multipart-params.byte-array :refer [byte-array-store]]
             [ring.middleware.multipart-params.byte-array :as some-byte-array-store]
             [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery *anti-forgery-token*]]
             [ring.middleware.session.cookie :refer [cookie-store]]
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [ring.middleware.multipart-params.temp-file :refer [temp-file-store]]
+
+
+
             [aleph.http.client-middleware :as ahclient]
             [hiccup.core :refer [html]]
          
@@ -161,61 +166,51 @@
     (println "Body class:" (when-let [b (:body request)] (class b)))
     (println (colorize "--- End of Middleware ---\n" "36"))
     (handler request)))
+(defn wrap-slurp-body [handler]
+  (fn [request]
+    (let [body-stream (:body request)
+          body-str (when body-stream (slurp body-stream))
+          updated-request (-> request
+                              (assoc :body (java.io.ByteArrayInputStream. (.getBytes body-str "UTF-8")))
+                              (assoc :raw-body body-str))]
+      (handler updated-request))))
+
+
 
 (def app
-(-> app-routes
-    ;wrap-multipart-params
-    ;ring-params/wrap-params
-    ;;ring-params/wrap-keyword-params
-    ;wrap-session
-    (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
-                        :error-handler custom-error-handler})
-    print-request-middleware
-    wrap-debug-handler
-)
-)
+  (-> app-routes
+      wrap-slurp-body
 
-;(def app
-;  (-> app-routes
-;      ;; Logging initial
-;      ;print-request-middleware
-;
-;      ;;; Multipart doit venir très tôt
-;      (wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
-;                              :max-size (* 10 1024 1024)})
-;
-;      ;;; Parsing des paramètres
-;      ring-params/wrap-params
-;      ;ahclient/wrap-form-params
-;
-;      ;;; Session avant anti-forgery
-;      ;(wrap-session)
-;
-;      ;; Protection CSRF
-;      (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
-;                          :error-handler custom-error-handler})
-;
-;      ;; Logging final
-;      print-request-middleware 
-;
-;      wrap-debug-handler
-;
-;
-;))
-
-
-
-        
-       ; ce handler ou tous autre handler
+      ;; Parse multipart/form-data first
+      (wrap-multipart-params {:store (temp-file-store)})
       ;(wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
-      ;                 :max-size (* 10 1024 1024)}) ;wrap-multipart-params middleware must be placed early in the pipeline to correctly read the raw multipart/form-data from the request
-      ;(wrap-session) ;before wrap-anti-forgery so that the anti-forgery middleware can store and retrieve the token from the session
+      ;                        :max-size (* 10 1024 1024)})
 
-      ;(wrap-anti-forgery {:safe-header "X-CSRF-Protection" 
-      ;                    :error-handler custom-error-handler}) ;ring.middleware.anti-forgery/wrap-anti-forgery must be placed after wrap-params and wrap-multipart-params so it can access the token from the form parameters
+      ;; Parse query and form params
+      ring-params/wrap-params
+      (wrap-keyword-params)
 
-      ;(wrap-anti-forgery {;:safe-header "X-CSRF-Protection" 
-      ;                    :error-handler custom-error-handler})))
+      ;; Enable session before CSRF
+
+      (wrap-session)
+
+
+      ;; CSRF protection after params and session
+      (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
+                          :error-handler custom-error-handler})
+
+
+
+      ;; Optional: enforce UTF-8
+      ;enforce-utf8-encoding
+
+      ;; Logging and debugging
+      print-request-middleware-begin
+      print-request-middleware
+      print-request-middleware-end
+      wrap-debug-handler))
+
+
 
 
       ;(wrap-defaults custom-defaults)

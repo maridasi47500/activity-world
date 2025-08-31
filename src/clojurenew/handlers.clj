@@ -15,6 +15,13 @@
             [clojure.walk :refer [keywordize-keys]]
             [ring.util.response :as response]
             [ring.util.codec :as codec]))
+(defn my-debug-handler [req]
+  (println "Params:" (:params req))
+  (println "Form params:" (:form-params req))
+  (println "Multipart params:" (:multipart-params req))
+  (println "Raw body class:" (class (:body req)))
+  (response/response {:status "ok"}))
+
 (defn render-html
   "Render an HTML template from resources."
   [template title content]
