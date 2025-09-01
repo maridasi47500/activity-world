@@ -113,16 +113,16 @@
 
 
     [:div
-         (hf/label "title" "title")    
-         (hf/text-field "title")    
+         (hf/label "news[title]" "title")    
+         (hf/text-field "news[title]")    
       ]
     [:div
-         (hf/label "photo" "photo")    
-         (hf/file-upload "photo")    
+         (hf/label "news[photo]" "photo")    
+         (hf/file-upload "news[photo]")    
       ]
     [:div
-         (hf/label "content" "content")    
-         (hf/text-area "content")    
+         (hf/label "news[content]" "content")    
+         (hf/text-area "news[content]")    
       ]
          (hf/submit-button "Submit"))])) #"(<html>|<\/html>)" "")
                  )
@@ -154,7 +154,7 @@
   (println "Form params:" (:form-params request))
   (println "Params:" (:params request))
   (println "yeah")
-  (let [{:keys [title content photo __anti-forgery-token]} (:multipart-params request)
+  (let [{:keys [title content photo __anti-forgery-token]} (:news (:multipart-params request))
         tempfile (:tempfile photo)
         filename (:filename photo)
         target-path (str "resources/public/uploads/" filename)]

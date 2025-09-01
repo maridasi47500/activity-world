@@ -1,41 +1,41 @@
 (ns clojurenew.core
-  (:require [compojure.core :refer [defroutes GET POST]]
-            [compojure.route :as route]
-            [ring.util.response :as response]
-            [clojure.data.json :as json]
-            [clojure.string :as str]
-            [org.httpkit.server :refer [run-server]] [clojurenew.db :as db]
-            [clojurenew.routes :refer [app-routes]]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
-            [ring.middleware.params :as ring-params]
-            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-            [ring.middleware.multipart-params.byte-array :refer [byte-array-store]]
-            [ring.middleware.multipart-params.byte-array :as some-byte-array-store]
-            [ring.middleware.session :refer [wrap-session]]
-            [ring.middleware.anti-forgery :refer [wrap-anti-forgery *anti-forgery-token*]]
-            [ring.middleware.session.cookie :refer [cookie-store]]
-            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
-            [ring.middleware.multipart-params.temp-file :refer [temp-file-store]]
+  (:require
+   ;; Routing
+   [compojure.core :refer [defroutes GET POST]]
+   [compojure.route :as route]
 
+   ;; Ring core
+   [ring.util.response :as response]
+   [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+   [ring.middleware.params :refer [wrap-params]]
+   [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+   [ring.middleware.nested-params :refer [wrap-nested-params]]
+   [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+   [ring.middleware.session :refer [wrap-session]]
+   [ring.middleware.session.cookie :refer [cookie-store]]
+   [ring.middleware.anti-forgery :refer [wrap-anti-forgery *anti-forgery-token*]]
+   ;[ring.middleware.stacktrace :refer [wrap-stacktrace]]
+   ;[ring.middleware.reload :refer [wrap-reload]]
 
+   ;; Logging
+   ;[ring.middleware.logger :refer [wrap-with-logger]]
 
-            [aleph.http.client-middleware :as ahclient]
-            [hiccup.core :refer [html]]
-         
-         [ring.middleware.anti-forgery.signed-token :as signed-token]
-         [ring.middleware.anti-forgery :refer :all]
-         [buddy.core.keys :as keys]
-         [clj-time.core :as time]))
+   ;; JSON & HTML
+   [clojure.data.json :as json]
+   [hiccup.core :refer [html]]
 
+   ;; Utilities
+   [clojure.string :as str]
+   [clj-time.core :as time]
 
+   ;; Server
+   [org.httpkit.server :refer [run-server]]
 
-
-
-
-
-
-
-
+   ;; App-specific
+   [clojurenew.db :as db]
+   [clojurenew.routes :refer [app-routes]]
+   [buddy.core.keys :as keys]
+   [aleph.http.client-middleware :as ahclient]))
 
 (defn get-custom-token [request]
   (get-in request [:headers "x-forgery-token"]))
@@ -55,17 +55,6 @@
 
 
 
-
-
-(let [expires-in-one-hour (time/hours 1)
-      ;secret "secret-to-validate-token-after-decryption-to-make-sure-i-encrypted-stuff"
-      secret "secretkey"
-      signed-token-strategy (signed-token/signed-token
-                              (keys/public-key "dev-resources/test-certs/pubkey.pem")
-                              (keys/private-key "dev-resources/test-certs/privkey.pem" "secretkey")
-                              expires-in-one-hour
-                              :identity)]
-      (wrap-anti-forgery custom-error-handler {:strategy signed-token-strategy}))
 
 
 
@@ -179,47 +168,19 @@
 
 (def app
   (-> app-routes
-      wrap-slurp-body
-
-      ;; Parse multipart/form-data first
-      (wrap-multipart-params {:store (temp-file-store)})
-      ;(wrap-multipart-params {:store (some-byte-array-store/byte-array-store)
-      ;                        :max-size (* 10 1024 1024)})
-
-      ;; Parse query and form params
-      ring-params/wrap-params
-      (wrap-keyword-params)
-
-      ;; Enable session before CSRF
-
+      wrap-keyword-params
+      wrap-nested-params
+      wrap-params
+      wrap-multipart-params
       (wrap-session)
-
-
-      ;; CSRF protection after params and session
-      (wrap-anti-forgery {:safe-header "X-CSRF-Protection"
-                          :error-handler custom-error-handler})
-
-
-
-      ;; Optional: enforce UTF-8
-      ;enforce-utf8-encoding
-
-      ;; Logging and debugging
-      print-request-middleware-begin
-      print-request-middleware
-      print-request-middleware-end
-      wrap-debug-handler))
+      (wrap-anti-forgery {:safe-header "X-CSRF-Protection"})
+      ;wrap-with-logger
+      ;wrap-stacktrace
+      ;wrap-reload
+      (wrap-defaults site-defaults)))
 
 
 
-
-      ;(wrap-defaults custom-defaults)
-      ;(wrap-anti-forgery handler {:strategy custom-strategy})
-      ;(wrap-anti-forgery handler {:strategy encrypted-token-strategy})
-      ;(wrap-multipart-params)
-      ;(wrap-anti-forgery {:safe-header "X-CSRF-Protection"})
-      ;(wrap-anti-forgery {:read-token get-custom-token})
-      ;(wrap-anti-forgery {:error-response custom-error-response})
 
 
 (defn -main
