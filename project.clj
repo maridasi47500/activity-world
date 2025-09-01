@@ -12,6 +12,7 @@
                  [metosin/jsonista "0.3.8"]
                  [ring/ring-json "0.5.1"]
                  [org.xerial/sqlite-jdbc "3.15.1"]
+                 [lein-ancient "1.0.0-RC3"]
                  [cheshire "5.12.0"]
                  [ring/ring-codec "1.2.0"]
                  [ring/ring-core "1.7.1"]
