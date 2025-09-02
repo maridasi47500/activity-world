@@ -182,9 +182,17 @@
       ;wrap-keyword-params
 
 
-      wrap-multipart-params
+
+
       wrap-nested-params
+      wrap-keyword-params
+      wrap-multipart-params
+
+
+
+
       wrap-params
+
       ;(wrap-session)
       (wrap-anti-forgery {:safe-header "X-CSRF-Protection"})
 

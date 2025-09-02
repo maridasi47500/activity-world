@@ -16,6 +16,28 @@
             [clojure.walk :refer [keywordize-keys]]
             [ring.util.response :as response]
             [ring.util.codec :as codec]))
+(defn handle-news [request]
+  (let [params (:multipart-params request)
+        title (get params "news[title]")
+        content (get params "news[content]")
+        photo (get params "news[photo]")
+        filename (:filename photo)
+        tempfile (:tempfile photo)
+        target-path (str "resources/public/uploads/" filename)]
+        
+
+    (println "Title:" title)
+    (println "Content:" content)
+    (println "Filename:" filename)
+
+    {:status 200
+     :headers {"Content-Type" "text/html"}
+     :body (str "<h2>News Received</h2>"
+                "<p>Title: " title "</p>"
+                "<p>Content: " content "</p>"
+                "<p>File: " filename "</p>")}))
+
+
 (defn my-debug-handler [req]
   (println "Params:" (:params req))
   (println "Form params:" (:form-params req))
@@ -155,9 +177,12 @@
   (println "Form params:" (:form-params request))
   (println "Params:" (:params request))
   (println "yeah")
-  (let [{:keys [title content photo]} (:news (:multipart-params request))
-        tempfile (:tempfile photo)
+  (let [params (:multipart-params request)
+        title (get params "news[title]")
+        content (get params "news[content]")
+        photo (get params "news[photo]")
         filename (:filename photo)
+        tempfile (:tempfile photo)
         target-path (str "resources/public/uploads/" filename)]
     (if (and title content photo tempfile filename)
       (do
