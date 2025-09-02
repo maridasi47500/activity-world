@@ -180,9 +180,10 @@
 
       ;print-request-middleware
       ;wrap-keyword-params
-      wrap-nested-params
+
 
       wrap-multipart-params
+      wrap-nested-params
       wrap-params
       ;(wrap-session)
       (wrap-anti-forgery {:safe-header "X-CSRF-Protection"})
