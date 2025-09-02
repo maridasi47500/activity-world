@@ -24,11 +24,15 @@
         filename (:filename photo)
         tempfile (:tempfile photo)
         target-path (str "resources/public/uploads/" filename)]
+   
         
 
     (println "Title:" title)
     (println "Content:" content)
     (println "Filename:" filename)
+        (clojure.java.io/make-parents target-path)
+        ;; Copie le fichier
+        (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
 
     {:status 200
      :headers {"Content-Type" "text/html"}
