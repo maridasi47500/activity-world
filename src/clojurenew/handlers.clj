@@ -8,6 +8,7 @@
             [hiccup.def :as hic-d]
             [hiccup2.core :as hic-c]
             [hiccup.form :as hf]
+            [cheshire.core :as wowjson]
             [clojurenew.db :as db]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -20,7 +21,7 @@
   (println "Form params:" (:form-params req))
   (println "Multipart params:" (:multipart-params req))
   (println "Raw body class:" (class (:body req)))
-  (response/response {:status "ok"}))
+  (response/response (wowjson/generate-string {:status "ok"})))
 
 (defn render-html
   "Render an HTML template from resources."
@@ -154,7 +155,7 @@
   (println "Form params:" (:form-params request))
   (println "Params:" (:params request))
   (println "yeah")
-  (let [{:keys [title content photo __anti-forgery-token]} (:news (:multipart-params request))
+  (let [{:keys [title content photo]} (:news (:multipart-params request))
         tempfile (:tempfile photo)
         filename (:filename photo)
         target-path (str "resources/public/uploads/" filename)]

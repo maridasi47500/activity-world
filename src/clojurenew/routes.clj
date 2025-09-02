@@ -30,12 +30,12 @@
   (GET "/clear-session" [] h/clear-session)
   (GET "/poster_news"  [req] (h/poster-news req))
 ;(mp/wrap-multipart-params 
-  ;(POST "/action_create_news" [params] 
-  ;   (println "Handler reached! Params: " params) 
-  ;   (h/action-create-news params))
-  (POST "/action_create_news" [req] 
-     (println "Handler reached! request: " req) 
-     (h/my-debug-handler req))
+  (POST "/action_create_news" [params] 
+     (println "Handler reached! Params: " params) 
+     (h/action-create-news params))
+  ;(POST "/action_create_news" req 
+  ;   (println "Handler reached! request: " req) 
+  ;   (h/my-debug-handler req))
   ;(wrap-multipart-params (POST "/action_create_news" [params] (h/action-create-news params) ))
   ;(wrap-multipart-params (POST "/action_create_news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler})))
   ;(POST "/action_create_news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler}))

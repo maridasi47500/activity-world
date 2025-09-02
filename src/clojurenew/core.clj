@@ -3,8 +3,11 @@
    ;; Routing
    [compojure.core :refer [defroutes GET POST]]
    [compojure.route :as route]
+   [cheshire.core :as wowjson]
+
 
    ;; Ring core
+   [ring.adapter.jetty :refer [run-jetty]]
    [ring.util.response :as response]
    [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
    [ring.middleware.params :refer [wrap-params]]
@@ -80,7 +83,10 @@
         " "
         (:uri request)
         " ") "32"))
-    (println "Params:" (:params request))
+
+    (println (colorize {:params (:params request)} "33")) ; jaune
+    ;(println (colorize (json/write-str {:params (:params request)} :indent true) "33")) ; jaune
+
     (println "keys request : " (keys request))
 
 
@@ -137,6 +143,7 @@
     (println (colorize "\n--- Incoming Request (Debug JSON) ---" "36")) ; cyan
     (println (json/write-str debug-map :indent true))
     (println (colorize "--- End of Debug ---\n" "36"))
+
     ))
 (defn wrap-debug-handler [handler]
   (fn [request]
@@ -145,7 +152,8 @@
     (println (colorize (str "Method:" (:request-method request)) "37"))
     (println (colorize (str "URI:" (:uri request)) "37"))
     (println "Params:" (:params request))
-    (println (colorize (json/write-str {:params (:params request)} :indent true) "33")) ; jaune
+    (println (colorize "Params:" (:params request) "33"))
+
     (println "Keys in request:" (keys request))
 
     (println "Headers:" (:headers request))
@@ -168,16 +176,22 @@
 
 (def app
   (-> app-routes
-      wrap-keyword-params
+
+
+      ;print-request-middleware
+      ;wrap-keyword-params
       wrap-nested-params
-      wrap-params
+
       wrap-multipart-params
-      (wrap-session)
+      wrap-params
+      ;(wrap-session)
       (wrap-anti-forgery {:safe-header "X-CSRF-Protection"})
+
       ;wrap-with-logger
       ;wrap-stacktrace
       ;wrap-reload
-      (wrap-defaults site-defaults)))
+      ;(wrap-defaults site-defaults)
+))
 
 
 
@@ -187,6 +201,8 @@
   "Main entrypoint: ensure DB/tables, start HTTP server."
   [& _]
   (db/ensure-db!)
-  (run-server #'app {:port 8080})
+  ;(run-server #'app {:port 8080})
   (println "Server started on port 8080"))
+  (run-jetty app {:port 8080})
+
 
