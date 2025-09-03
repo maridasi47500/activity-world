@@ -2,7 +2,9 @@
   "Ring handlers for Activity World."
   (:gen-class)
   (:use ring.adapter.jetty)
-  (:import [javax.imageio ImageIO])
+  (:import [javax.imageio ImageIO]
+           [java.io ByteArrayInputStream ByteArrayOutputStream File])
+
   (:require [hiccup.page :as hic-p]
             [hiccup.element :as hic-e]
             [hiccup.def :as hic-d]
@@ -254,20 +256,52 @@
         (db/get-news)
         (slurp (io/resource "_news.html"))))
     "text/html"))
-(defn render-pic [hey]
-    (let [image (ImageIO/read (io/resource hey))
-      image-file (java.io.File. (io/resource hey))]
-  (ImageIO/write image "jpg" image-file)))
+(defn render-pic-upload [filename]
+  (let [resource-path (str "public/uploads/" filename)
+        extension (clojure.string/lower-case (last (clojure.string/split filename #"\.")))
+        content-type (case extension
+                       "png" "image/png"
+                       "jpg" "image/jpeg"
+                       "jpeg" "image/jpeg"
+                       "gif" "image/gif"
+                       "webp" "image/webp"
+                       "image/octet-stream") ; fallback
+        image (ImageIO/read (io/input-stream (io/resource resource-path)))
+        baos (ByteArrayOutputStream.)]
+    (ImageIO/write image extension baos)
+    (-> (response/response (ByteArrayInputStream. (.toByteArray baos)))
+        (response/content-type content-type))))
 
+(defn voir-photo-upload [req]
+  (let [somepic (get-in req [:params :mypic])]
+    (if somepic
+      (render-pic-upload somepic)
+      (response/not-found "image not found"))))
+
+
+(defn render-pic [filename]
+  (let [resource-path (str "photos/" filename)
+        extension (clojure.string/lower-case (last (clojure.string/split filename #"\.")))
+        content-type (case extension
+                       "png" "image/png"
+                       "jpg" "image/jpeg"
+                       "jpeg" "image/jpeg"
+                       "gif" "image/gif"
+                       "webp" "image/webp"
+                       "image/octet-stream") ; fallback
+        image (ImageIO/read (io/input-stream (io/resource resource-path)))
+        baos (ByteArrayOutputStream.)]
+    (ImageIO/write image extension baos)
+    (-> (response/response (ByteArrayInputStream. (.toByteArray baos)))
+        (response/content-type content-type))))
 
 
 (defn voir-photo-mypic [req]
-  (let [somepic ((req :params) :mypic)]
+  (let [somepic (get-in req [:params :mypic])]
     (if somepic
-      (response/content-type
-        (response/response (render-pic somepic))
-        "image/jpeg")
+      (render-pic somepic)
       (response/not-found "image not found"))))
+
 
 (defn voir-news-id [req]
   (let [id (get-in req [:params :id])

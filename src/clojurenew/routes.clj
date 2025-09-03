@@ -50,6 +50,8 @@
 
   ;;pic 
   (GET "/:mypic.jpeg" [mypic :as req] (h/voir-photo-mypic (assoc-in req [:params :mypic] mypic)))
+  (GET "/pics/:mypic" [mypic :as req] (h/voir-photo-mypic (assoc-in req [:params :mypic] mypic)))
+  (GET "/uploads/:mypic" [mypic :as req] (h/voir-photo-upload (assoc-in req [:params :mypic] mypic)))
 
   ;; Home and hello
   (GET "/hello" [] h/home)
