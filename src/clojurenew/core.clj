@@ -209,9 +209,10 @@
 (defn -main
   "Main entrypoint: ensure DB/tables, start HTTP server."
   [& _]
+  ;(run-jetty app {:port 8080})
   (db/ensure-db!)
-  ;(run-server #'app {:port 8080})
+
   (println "Server started on port 8080"))
-  (run-jetty app {:port 8080})
+  (run-server #'app {:port 8080})
 
 

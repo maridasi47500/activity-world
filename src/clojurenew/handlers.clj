@@ -24,6 +24,13 @@
         filename (:filename photo)
         tempfile (:tempfile photo)
         target-path (str "resources/public/uploads/" filename)]
+    (if (and title content photo tempfile filename)
+      (do
+       (println "yessssss")
+       (println "yessssss")
+      )
+      (println "nooooo")
+    )
    
         
 
@@ -70,7 +77,33 @@
   "Render an HTML template from resources."
   [template & [params]]
   (slurp (io/resource template)))
+;(defn replace-several [s & {:as replacements}]
+;  (reduce (fn [s [match replacement]]
+;            (clojure.string/replace s match replacement))
+;          s replacements))
+(defn replace-several [s & {:as replacements}]
+  (reduce (fn [s [match replacement]]
+            (if (and match replacement)
+              (clojure.string/replace s match replacement)
+              s)) ; skip if either is nil
+          s replacements))
 
+
+(defn render-collection-params
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several template
+                 "$title" (:title %)
+                 "$image" (:image %)
+                 "$content" (:content %)) coll))
+               "<p>Il n'y a rien à afficher.</p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    (format page title body)))
 (defn render-collection
   "Render a collection of news into a template."
   [title coll template]
@@ -190,14 +223,16 @@
         target-path (str "resources/public/uploads/" filename)]
     (if (and title content photo tempfile filename)
       (do
+        (println "yeeeeeeees wow")
         ;; Crée les dossiers si besoin
         (clojure.java.io/make-parents target-path)
         ;; Copie le fichier
         (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
         ;; Enregistre en base
-        (db/insert-news! {"title" title
-                          "photo" filename
-                          "content" content})
+        (println "news to insert" title filename content)
+        (db/insert-news! {:title title
+                          :image filename
+                          :content content})
         ;; Retourne une réponse JSON
         (response/content-type
          (response/response (render-json "index.json"))
@@ -210,13 +245,14 @@
 
 
 
-(defn voir-news [_]
+(defn voir-news [req]
+  (println "voir news handler reached")
   (response/content-type
     (response/response
-      (render-collection
+      (render-collection-params
         "Actualités"
         (db/get-news)
-        (slurp (io/resource "_reservation.html"))))
+        (slurp (io/resource "_news.html"))))
     "text/html"))
 (defn render-pic [hey]
     (let [image (ImageIO/read (io/resource hey))

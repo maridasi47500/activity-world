@@ -30,12 +30,12 @@
   (GET "/clear-session" [] h/clear-session)
   (GET "/poster_news"  [req] (h/poster-news req))
 ;(mp/wrap-multipart-params 
-  (POST "/action_create_news" req
-     (println "Handler reached! Params: " req) 
-     (h/handle-news req))
   ;(POST "/action_create_news" req
   ;   (println "Handler reached! Params: " req) 
-  ;   (h/action-create-news req))
+  ;   (h/handle-news req))
+  (POST "/action_create_news" req
+     (println "Handler reached! Params: " req) 
+     (h/action-create-news req))
   ;(POST "/action_create_news" req 
   ;   (println "Handler reached! request: " req) 
   ;   (h/my-debug-handler req))
@@ -57,7 +57,7 @@
 
   ;; News: routes preserved as in original code
 
-  (GET "/voir_news" [] h/voir-news)
+  (GET "/render_news" req (h/voir-news req))
   (GET "/voir_news/:id" [id :as req] (h/voir-news-id (assoc-in req [:params :id] id)))
   (GET "/edit_news/:id" [id :as req] (h/edit-news-id (assoc-in req [:params :id] id)))
 
