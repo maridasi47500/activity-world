@@ -88,7 +88,7 @@
           s replacements))
 
 
-(defn render-collection-params-photo
+(defn render-collection-params-photos
   "Render a collection of news into a template with name of params in view."
   [title coll template]
   (println "coll:" coll)
