@@ -88,6 +88,19 @@
           s replacements))
 
 
+(defn render-collection-params-photo
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several template
+                 "$myphoto" (:myphoto %)) coll))
+               "<p>Il n'y a rien à afficher.</p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    (format page title body)))
 (defn render-collection-params
   "Render a collection of news into a template with name of params in view."
   [title coll template]
@@ -353,7 +366,11 @@
   (let [album_id (get-in req [:params :album_id])
         photos (db/get-photos-by-album album_id)]
     (response/content-type
-      (response/response (render-photos-collection photos))
+        (response/response (replace-several (mes-mots "index.html" "voir un album" "renderalbum.html" )
+           "$allphotos" (render-collection-params-photos
+        "Photos"
+        photos
+        (slurp (io/resource "_photo.html"))))
       "text/html")))
 ;;;;
 (defn voir-albums [req]
