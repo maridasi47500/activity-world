@@ -8,8 +8,39 @@
    :subname "db/database.db"})
 
 (defn ensure-db!
-  "Create the news table if it doesn't exist. Safe to call multiple times."
   []
+  ;; Table news existante…
+  ;; Ajoute ces commandes :
+  (try
+    (jdbc/db-do-commands
+      db-spec
+      (jdbc/create-table-ddl :video
+        [[:id "integer primary key autoincrement"]
+         [:timestamp :datetime :default :current_timestamp]
+         [:title :text]
+         [:content :text]]))
+    (catch Exception e
+      (println "Video table: " (.getMessage e))))
+  (try
+    (jdbc/db-do-commands
+      db-spec
+      (jdbc/create-table-ddl :album_photo
+        [[:id "integer primary key autoincrement"]
+         [:timestamp :datetime :default :current_timestamp]
+         [:title :text]
+         [:subtitle :text]]))
+    (catch Exception e
+      (println "Album table: " (.getMessage e))))
+  (try
+    (jdbc/db-do-commands
+      db-spec
+      (jdbc/create-table-ddl :photo
+        [[:id "integer primary key autoincrement"]
+         [:album_id :integer]
+         [:timestamp :datetime :default :current_timestamp]
+         [:myphoto :text]]))
+    (catch Exception e
+      (println "Photo table: " (.getMessage e))))
   (try
     (println "trying to create the news db")
     (jdbc/db-do-commands
@@ -17,9 +48,9 @@
       (jdbc/create-table-ddl :news
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
-         [:title :text]
-         [:image :text]
-         [:content :text]]))
+         [:album_id :text]
+         [:myphoto :text]
+         ]))
     (catch Exception e
       (println "DB already exists or error:" (.getMessage e)))))
 
@@ -42,3 +73,47 @@
 
 (defn delete-news! [id]
   (jdbc/delete! db-spec :news ["id=?" id]))
+;; VIDEO
+(defn insert-video! [params]
+  (jdbc/insert! db-spec :video params))
+
+(defn get-videos []
+  (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
+
+(defn get-video-by-id [id]
+  (first (jdbc/query db-spec ["select * from video where id = ?" id])))
+
+(defn update-video! [params]
+  (jdbc/update! db-spec :video params ["id=?" (:id params)]))
+
+(defn delete-video! [id]
+  (jdbc/delete! db-spec :video ["id=?" id]))
+
+;; ALBUM_PHOTO
+(defn insert-album! [params]
+  (jdbc/insert! db-spec :album_photo params))
+
+(defn get-albums []
+  (jdbc/query db-spec ["select * from album_photo ORDER BY timestamp DESC"]))
+
+(defn get-album-by-id [id]
+  (first (jdbc/query db-spec ["select * from album_photo where id = ?" id])))
+
+(defn update-album! [params]
+  (jdbc/update! db-spec :album_photo params ["id=?" (:id params)]))
+
+(defn delete-album! [id]
+  (jdbc/delete! db-spec :album_photo ["id=?" id]))
+
+;; PHOTO
+(defn insert-photo! [params]
+  (jdbc/insert! db-spec :photo params))
+
+(defn get-photos-by-album [album_id]
+  (jdbc/query db-spec ["select * from photo where album_id = ?" album_id]))
+
+(defn get-photo-by-id [id]
+  (first (jdbc/query db-spec ["select * from photo where id = ?" id])))
+
+(defn delete-photo! [id]
+  (jdbc/delete! db-spec :photo ["id=?" id]))

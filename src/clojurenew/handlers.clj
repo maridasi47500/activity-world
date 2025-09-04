@@ -33,9 +33,6 @@
       )
       (println "nooooo")
     )
-   
-        
-
     (println "Title:" title)
     (println "Content:" content)
     (println "Filename:" filename)
@@ -158,6 +155,32 @@
       ]
 
          (hf/submit-button "Submit"))]);)
+(defn form-album-page
+  [req]
+    (str/replace (hic-p/html5 
+
+
+
+
+
+
+[:div (hf/form-to {:id "form-create-album"} [:post "/action_create_album"]
+    [:div
+         (anti-forgery-field)
+      ]
+
+
+    [:div
+         (hf/label "album[title]" "title")    
+         (hf/text-field "album[title]")    
+      ]
+    [:div
+         (hf/label "album[subtitle]" "subtitle")    
+         (hf/text-field "album[subtitle]")    
+      ]
+         (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+                 )
+
 (defn form-news-page
   [req]
     (str/replace (hic-p/html5 
@@ -166,7 +189,6 @@
 
 
 
-(hf/form-to {:id "form-create-news", :enctype "multipart/form-data"} [:post "/action_create_news"]
 
 [:div (hf/form-to {:id "form-create-news"} [:post "/action_create_news"]
     [:div
@@ -186,7 +208,7 @@
          (hf/label "news[content]" "content")    
          (hf/text-area "news[content]")    
       ]
-         (hf/submit-button "Submit"))])) #"(<html>|<\/html>)" "")
+         (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
                  )
 
 
@@ -327,11 +349,144 @@
     (db/update-news! params)
     (-> (response/redirect "/voir_news")
         (response/status 303))))
+(defn voir-photos-by-album [req]
+  (let [album_id (get-in req [:params :album_id])
+        photos (db/get-photos-by-album album_id)]
+    (response/content-type
+      (response/response (render-photos-collection photos))
+      "text/html")))
+;;;;
+(defn voir-albums [req]
+  (response/content-type
+    (response/response
+      (render-collection-params
+        "Albums"
+        (db/get-albums)
+        (slurp (io/resource "_album.html"))))
+    "text/html"))
+
+(defn poster-album [req]
+  (response/content-type
+    (response/response (render-html "index.html" "ajouter un album" (form-album-page req)))
+    "text/html"))
+
+(defn action-create-photo [request]
+  (let [params (:multipart-params request)
+        album_id (get params "photo[album_id]")
+        myphoto (get params "photo[myphoto]")
+        filename (:filename myphoto)
+        tempfile (:tempfile myphoto)
+        target-path (str "resources/public/uploads/" filename)]
+    (if (and album_id myphoto tempfile filename)
+      (do
+        (println "yeeeeeeees wow")
+        ;; Crée les dossiers si besoin
+        (clojure.java.io/make-parents target-path)
+        ;; Copie le fichier
+        (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
+        ;; Enregistre en base
+        (println "news to insert" title filename content)
+        (db/insert-news! {:album_id album_id
+                          :myphoto myphoto})
+        ;; Retourne une réponse JSON
+        (response/content-type
+         (response/response (replace-several (render-json "indexalbum.json")
+                                "$album_id" album_id))
+         "application/json"))
+      ;; Champs manquants
+      (response/content-type
+       (response/response (replace-several (render-json "myphotoform.json") 
+                                "$album_id" album_id))
+       "application/json"))))
+
+(defn action-create-album [request]
+  (let [params (:form-params request)]
+    (db/insert-album! params)
+    (-> (response/redirect "/render_albums")
+        (response/status 303))))
+;;;;
 
 (defn action-delete-news [req]
   (let [id (get-in req [:params :id])]
     (db/delete-news! id)
     (-> (response/redirect "/voir_news")
+        (response/status 303))))
+(defn voir-videos [req]
+  (response/content-type
+    (response/response
+      (render-collection-params
+        "Vidéos"
+        (db/get-videos)
+        (slurp (io/resource "_video.html"))))
+    "text/html"))
+(defn form-video-page
+  [req]
+    (str/replace (hic-p/html5 
+
+
+
+
+
+
+[:div (hf/form-to {:id "form-create-video"} [:post "/action_create_video"]
+    [:div
+         (anti-forgery-field)
+      ]
+
+
+    [:div
+         (hf/label "video[title]" "title")    
+         (hf/text-field "video[title]")    
+      ]
+    [:div
+         (hf/label "video[photo]" "photo")    
+         (hf/file-upload "video[photo]")    
+      ]
+    [:div
+         (hf/label "video[content]" "content")    
+         (hf/text-area "video[content]")    
+      ]
+         (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+                 )
+(defn form-photo-page
+  [req album_id]
+    (str/replace (hic-p/html5 
+
+
+
+
+
+
+[:div (hf/form-to {:id "form-create-photo"} [:post "/action_create_photo"]
+    [:div
+         (anti-forgery-field)
+      ]
+
+
+    [:div
+         (hf/label "photo[myphoto]" "photo")    
+         (hf/file-upload "photo[myphoto]")    
+      ]
+    [:div
+         (hf/hidden-field "photo[album_id]" album_id)    
+      ]
+         (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+                 )
+
+(defn poster-video [req]
+  (response/content-type
+    (response/response (render-html "index.html" "ajouter une vidéo" (form-video-page req)))
+    "text/html"))
+
+(defn poster-photo [req album_id]
+  (response/content-type
+    (response/response (render-html "index.html" "ajouter une photo a un album" (form-photo-page req album_id)))
+    "text/html"))
+
+(defn action-create-video [request]
+  (let [params (:form-params request)]
+    (db/insert-video! params)
+    (-> (response/redirect "/render_videos")
         (response/status 303))))
 
 (defn not-found-handler [_]

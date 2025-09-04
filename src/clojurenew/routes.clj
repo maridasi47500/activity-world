@@ -27,6 +27,26 @@
 
 
 (defroutes app-routes
+  ;; VIDEO
+  (GET "/render_videos" req (h/voir-videos req))
+  (GET "/poster_video" [req] (h/poster-video req))
+  (POST "/action_create_video" req (h/action-create-video req))
+  (GET "/edit_video/:id" [id :as req] (h/edit-video-id (assoc-in req [:params :id] id)))
+  (POST "/action_update_video" req (h/action-update-video req))
+  (POST "/deletevideo/:id" [id :as req] (h/action-delete-video (assoc-in req [:params :id] id)))
+
+  ;; ALBUM_PHOTO
+  (GET "/render_albums" req (h/voir-albums req))
+  (GET "/album/:id" [id :as req] (h/voir-album-id (assoc-in req [:params :id] id)))
+  (GET "/poster_album" [req] (h/poster-album req))
+  (POST "/action_create_album" req (h/action-create-album req))
+  (POST "/deletealbum/:id" [id :as req] (h/action-delete-album (assoc-in req [:params :id] id)))
+
+  ;; PHOTO
+  (GET "/album/:album_id/photos" [album_id :as req] (h/voir-photos-by-album (assoc-in req [:params :album_id] album_id)))
+  (GET "/poster_photo/:album_id" [album_id :as req] (h/poster-photo req album_id))
+  (POST "/action_create_photo" req (h/action-create-photo req))
+  (POST "/deletephoto/:id" [id :as req] (h/action-delete-photo (assoc-in req [:params :id] id)))
   (GET "/clear-session" [] h/clear-session)
   (GET "/poster_news"  [req] (h/poster-news req))
 ;(mp/wrap-multipart-params 

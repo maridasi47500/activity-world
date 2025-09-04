@@ -1,0 +1,14 @@
+<form action="/action_create_video" method="post">
+  <input name="__anti-forgery-token" type="hidden" value="abcdefg123456789" />
+  <div>
+    <label for="video_title">Title</label>
+    <input id="video_title" name="title" type="text"/>
+  </div>
+  <div>
+    <label for="video_content">Content</label>
+    <textarea id="video_content" name="content"></textarea>
+  </div>
+  <div>
+    <input type="submit" value="Add video"/>
+  </div>
+</form>
