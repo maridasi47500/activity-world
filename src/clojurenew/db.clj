@@ -17,6 +17,7 @@
       (jdbc/create-table-ddl :video
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
+         [:myvideo :text]
          [:title :text]
          [:content :text]]))
     (catch Exception e
@@ -48,8 +49,9 @@
       (jdbc/create-table-ddl :news
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
-         [:album_id :text]
-         [:myphoto :text]
+         [:title :text]
+         [:content :text]
+         [:image :text]
          ]))
     (catch Exception e
       (println "DB already exists or error:" (.getMessage e)))))

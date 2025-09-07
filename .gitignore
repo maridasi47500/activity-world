@@ -1,5 +1,6 @@
 /target
 /classes
+resources/public/uploads
 /checkouts
 profiles.clj
 resources/public/uploads/

@@ -101,6 +101,21 @@
         page (slurp (io/resource "index.html"))]
     (println "body:" body)
     (format page title body)))
+(defn render-collection-params-video
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several template
+                 "$title" (:title %)
+                 "$myvideo" (:myvideo %)
+                 "$content" (:content %)) coll))
+               "<p>Il n'y a rien à afficher.</p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    (format page title body)))
 (defn render-collection-params
   "Render a collection of news into a template with name of params in view."
   [title coll template]
@@ -243,6 +258,47 @@
   (response/content-type
     (response/response (mes-mots "index.html" "title" "welcome.html"))
     "text/html"))
+(defn sanitize-filename [filename]
+  (-> filename
+      (str/replace #"[^a-zA-Z0-9._-]" "_")
+      (str/replace #"_{2,}" "_")))
+
+(defn action-create-video [request]
+  (println "request" (str request))
+  (println "Headers:" (:headers request))
+  (println "Multipart params:" (:multipart-params request))
+  (println "Form params:" (:form-params request))
+  (println "Params:" (:params request))
+  (println "yeah")
+  (let [params (:multipart-params request)
+        title (get params "video[title]")
+        content (get params "video[content]")
+        myvideo (get params "video[myvideo]")
+        filename (:filename myvideo)
+        tempfile (:tempfile myvideo)
+        safe-filename (sanitize-filename filename)
+        target-path (str "resources/public/uploads/" safe-filename)]
+    (if (and title content myvideo tempfile filename)
+      (do
+        (println "yeeeeeeees wow")
+        ;; Crée les dossiers si besoin
+        (clojure.java.io/make-parents target-path)
+        ;; Copie le fichier
+        (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
+        ;; Enregistre en base
+        (println "video to insert" title filename content)
+        (db/insert-video! {:title title
+                          :myvideo safe-filename
+                          :content content})
+        ;; Retourne une réponse JSON
+        (response/content-type
+         (response/response (render-json "indexvideo.json"))
+         "application/json"))
+      ;; Champs manquants
+      (response/content-type
+       (response/response (render-json "myformvideo.json"))
+       "application/json"))))
+
 
 (defn action-create-news [request]
   (println "request" (str request))
@@ -257,7 +313,9 @@
         photo (get params "news[photo]")
         filename (:filename photo)
         tempfile (:tempfile photo)
-        target-path (str "resources/public/uploads/" filename)]
+        safe-filename (sanitize-filename filename)
+        target-path (str "resources/public/uploads/" safe-filename)]
+
     (if (and title content photo tempfile filename)
       (do
         (println "yeeeeeeees wow")
@@ -268,7 +326,7 @@
         ;; Enregistre en base
         (println "news to insert" title filename content)
         (db/insert-news! {:title title
-                          :image filename
+                          :image safe-filename
                           :content content})
         ;; Retourne une réponse JSON
         (response/content-type
@@ -291,21 +349,41 @@
         (db/get-news)
         (slurp (io/resource "_news.html"))))
     "text/html"))
+
+
 (defn render-pic-upload [filename]
-  (let [resource-path (str "public/uploads/" filename)
+  (let [resource-path (io/resource (str "public/uploads/" filename))
         extension (clojure.string/lower-case (last (clojure.string/split filename #"\.")))
         content-type (case extension
-                       "png" "image/png"
-                       "jpg" "image/jpeg"
+                       "png"  "image/png"
+                       "jpg"  "image/jpeg"
                        "jpeg" "image/jpeg"
-                       "gif" "image/gif"
+                       "gif"  "image/gif"
                        "webp" "image/webp"
-                       "image/octet-stream") ; fallback
-        image (ImageIO/read (io/input-stream (io/resource resource-path)))
-        baos (ByteArrayOutputStream.)]
-    (ImageIO/write image extension baos)
-    (-> (response/response (ByteArrayInputStream. (.toByteArray baos)))
-        (response/content-type content-type))))
+                       "mp4"  "video/mp4"
+                       "mov"  "video/quicktime"
+                       "avi"  "video/x-msvideo"
+                       "webm" "video/webm"
+                       "mkv"  "video/x-matroska"
+                       "flv"  "video/x-flv"
+                       "3gp"  "video/3gpp"
+                       "wmv"  "video/x-ms-wmv"
+                       "application/octet-stream") ; fallback
+        file (clojure.java.io/file resource-path)]
+    (if (#{ "png" "jpg" "jpeg" "gif" "webp" } extension)
+      ;; Handle image
+      (let [image (ImageIO/read file)
+            baos (ByteArrayOutputStream.)]
+        (ImageIO/write image extension baos)
+        (-> (response/response (ByteArrayInputStream. (.toByteArray baos)))
+            (response/content-type content-type)))
+      ;; Handle video or other binary
+      (let [stream (clojure.java.io/input-stream file)
+      length (.length file)]
+        (-> (response/response stream)
+            (response/content-type content-type)
+            (response/header "Content-Length" (str length)))))))
+
 
 (defn voir-photo-upload [req]
   (let [somepic (get-in req [:params :mypic])]
@@ -323,6 +401,14 @@
                        "jpeg" "image/jpeg"
                        "gif" "image/gif"
                        "webp" "image/webp"
+                       "mp4"  "video/mp4"
+                       "mov"  "video/quicktime"
+                       "avi"  "video/x-msvideo"
+                       "webm" "video/webm"
+                       "mkv"  "video/x-matroska"
+                       "flv"  "video/x-flv"
+                       "3gp"  "video/3gpp"
+                       "wmv"  "video/x-ms-wmv"
                        "image/octet-stream") ; fallback
         image (ImageIO/read (io/input-stream (io/resource resource-path)))
         baos (ByteArrayOutputStream.)]
@@ -338,6 +424,14 @@
       (response/not-found "image not found"))))
 
 
+(defn voir-album-id [req]
+  (let [id (get-in req [:params :id])
+        news (db/get-album-by-id id)]
+    (if news
+      (response/content-type
+        (response/response (render-html "voiralbums.html" "hey" "wow" (:title news) (:content news) (:url news)))
+        "text/html")
+      (response/not-found "album not found"))))
 (defn voir-news-id [req]
   (let [id (get-in req [:params :id])
         news (db/get-news-by-id id)]
@@ -439,6 +533,16 @@
         (response/status 303))))
 ;;;;
 
+(defn action-delete-photo [req]
+  (let [id (get-in req [:params :id])]
+    (db/delete-photo! id)
+    (-> (response/redirect "/voir_photo")
+        (response/status 303))))
+(defn action-delete-album [req]
+  (let [id (get-in req [:params :id])]
+    (db/delete-album! id)
+    (-> (response/redirect "/voir_album")
+        (response/status 303))))
 (defn action-delete-video [req]
   (let [id (get-in req [:params :id])]
     (db/delete-video! id)
@@ -452,7 +556,7 @@
 (defn voir-videos [req]
   (response/content-type
     (response/response
-      (render-collection-params
+      (render-collection-params-video
         "Vidéos"
         (db/get-videos)
         (slurp (io/resource "_video.html"))))
@@ -477,18 +581,18 @@
          (hf/text-field "video[title]")    
       ]
     [:div
-         (hf/label "video[photo]" "photo")    
-         (hf/file-upload "video[photo]")    
-      ]
-    [:div
-         (hf/label "video[content]" "content")    
-         (hf/text-area "video[content]")    
-      ]
-         (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
-                 )
+         (hf/label "video[myvideo]" "video")    
+ (hf/file-upload "video[myvideo]")    
+]
+[:div
+ (hf/label "video[content]" "content")    
+ (hf/text-area "video[content]")    
+]
+ (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+	 )
 (defn form-photo-page
-  [req album_id]
-    (str/replace (hic-p/html5 
+[req album_id]
+(str/replace (hic-p/html5 
 
 
 
@@ -496,36 +600,31 @@
 
 
 [:div (hf/form-to {:id "form-create-photo"} [:post "/action_create_photo"]
-    [:div
-         (anti-forgery-field)
-      ]
+[:div
+ (anti-forgery-field)
+]
 
 
-    [:div
-         (hf/label "photo[myphoto]" "photo")    
-         (hf/file-upload "photo[myphoto]")    
-      ]
-    [:div
-         (hf/hidden-field "photo[album_id]" album_id)    
-      ]
-         (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
-                 )
+[:div
+ (hf/label "photo[myphoto]" "photo")    
+ (hf/file-upload "photo[myphoto]")    
+]
+[:div
+ (hf/hidden-field "photo[album_id]" album_id)    
+]
+ (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+	 )
 
 (defn poster-video [req]
-  (response/content-type
-    (response/response (render-html "index.html" "ajouter une vidéo" (form-video-page req)))
-    "text/html"))
+(response/content-type
+(response/response (render-html "index.html" "ajouter une vidéo" (form-video-page req)))
+"text/html"))
 
 (defn poster-photo [req album_id]
-  (response/content-type
-    (response/response (render-html "index.html" "ajouter une photo a un album" (form-photo-page req album_id)))
-    "text/html"))
+(response/content-type
+(response/response (render-html "index.html" "ajouter une photo a un album" (form-photo-page req album_id)))
+"text/html"))
 
-(defn action-create-video [request]
-  (let [params (:form-params request)]
-    (db/insert-video! params)
-    (-> (response/redirect "/render_videos")
-        (response/status 303))))
 
 (defn not-found-handler [_]
   (-> (response/response (str (render-html "404.html" "hey" "hi") _))

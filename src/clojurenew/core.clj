@@ -178,7 +178,7 @@
   (-> app-routes
 
 
-      ;print-request-middleware
+      print-request-middleware
       ;wrap-keyword-params
 
 
@@ -186,7 +186,8 @@
 
       wrap-nested-params
       wrap-keyword-params
-      wrap-multipart-params
+      (wrap-multipart-params {:max-size (* 350 1024 1024)})
+
 
 
 
@@ -213,6 +214,6 @@
   (db/ensure-db!)
 
   (println "Server started on port 8080"))
-  (run-server #'app {:port 8080})
+  (run-server #'app {:port 8080 :max-body (* 350 1024 1024)})
 
 

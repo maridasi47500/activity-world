@@ -6,7 +6,7 @@ var now = new Date(),
 $(function(){
 //$('.carousel').carousel();
 
-$('#form-create-news').on('submit', function () {
+$('#form-create-news, #form-create-video, #form-create-photo, #form-create-album').on('submit', function () {
   var fd = new FormData($(this)[0]);    
 
   if (window.filesize > 1024*1024*10) {

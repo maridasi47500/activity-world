@@ -30,7 +30,10 @@
   ;; VIDEO
   (GET "/render_videos" req (h/voir-videos req))
   (GET "/poster_video" [req] (h/poster-video req))
-  (POST "/action_create_video" req (h/action-create-video req))
+  ;   (println "Handler reached! Params: " req) 
+  (POST "/action_create_video" req 
+     (println "Handler reached! Params: " req)
+     (h/action-create-video req))
   (GET "/edit_video/:id" [id :as req] (h/edit-video-id (assoc-in req [:params :id] id)))
   (POST "/action_update_video" req (h/action-update-video req))
   (POST "/deletevideo/:id" [id :as req] (h/action-delete-video (assoc-in req [:params :id] id)))
@@ -50,19 +53,9 @@
   (GET "/clear-session" [] h/clear-session)
   (GET "/poster_news"  [req] (h/poster-news req))
 ;(mp/wrap-multipart-params 
-  ;(POST "/action_create_news" req
-  ;   (println "Handler reached! Params: " req) 
-  ;   (h/handle-news req))
   (POST "/action_create_news" req
      (println "Handler reached! Params: " req) 
      (h/action-create-news req))
-  ;(POST "/action_create_news" req 
-  ;   (println "Handler reached! request: " req) 
-  ;   (h/my-debug-handler req))
-  ;(wrap-multipart-params (POST "/action_create_news" [params] (h/action-create-news params) ))
-  ;(wrap-multipart-params (POST "/action_create_news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler})))
-  ;(POST "/action_create_news" [params] (wrap-anti-forgery (h/action-create-news params) {:error-handler custom-error-handler}))
-  ;(POST "/action_create_news" [params] (h/action-create-news params) )
 
   ;; CSS and JS (if needed, adapt as per your previous code)
   (GET "/app.css" [] (h/render-css "Show my activity world" "app.css"))
