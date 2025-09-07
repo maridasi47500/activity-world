@@ -347,6 +347,14 @@
         "text/html")
       (response/not-found "News not found"))))
 
+(defn edit-video-id [req]
+  (let [id (get-in req [:params :id])
+        news (db/get-video-by-id id)]
+    (if news
+      (response/content-type
+        (response/response (render-html "formeditvideo.html" "hey" "wow" (:title news) (:content news) (:video news)))
+        "text/html")
+      (response/not-found "video not found"))))
 (defn edit-news-id [req]
   (let [id (get-in req [:params :id])
         news (db/get-news-by-id id)]
@@ -357,22 +365,30 @@
       (response/not-found "News not found"))))
 
 
+(defn action-update-video [req]
+  (let [params (if (:form-params req) (:form-params req) (:params req))]
+    (db/update-video! params)
+    (-> (response/redirect "/voir_video")
+        (response/status 303))))
 (defn action-update-news [req]
   (let [params (if (:form-params req) (:form-params req) (:params req))]
     (db/update-news! params)
     (-> (response/redirect "/voir_news")
         (response/status 303))))
+
 (defn voir-photos-by-album [req]
   (let [album_id (get-in req [:params :album_id])
-        photos (db/get-photos-by-album album_id)]
-    (response/content-type
-        (response/response (replace-several (mes-mots "index.html" "voir un album" "renderalbum.html" )
-           "$allphotos" (render-collection-params-photos
-        "Photos"
-        photos
-        (slurp (io/resource "_photo.html"))))
-      "text/html")))
-;;;;
+        photos (db/get-photos-by-album album_id)
+        html (replace-several
+               (mes-mots "index.html" "voir un album" "renderalbum.html")
+               "$allphotos"
+               (render-collection-params-photos
+                 "Photos"
+                 photos
+                 (slurp (io/resource "_photo.html"))))]
+    (-> (response/response html)
+        (response/content-type "text/html"))))
+
 (defn voir-albums [req]
   (response/content-type
     (response/response
@@ -402,8 +418,8 @@
         ;; Copie le fichier
         (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
         ;; Enregistre en base
-        (println "news to insert" title filename content)
-        (db/insert-news! {:album_id album_id
+        (println "photo to insert album id" album_id myphoto)
+        (db/insert-photo! {:album_id album_id
                           :myphoto myphoto})
         ;; Retourne une réponse JSON
         (response/content-type
@@ -423,6 +439,11 @@
         (response/status 303))))
 ;;;;
 
+(defn action-delete-video [req]
+  (let [id (get-in req [:params :id])]
+    (db/delete-video! id)
+    (-> (response/redirect "/voir_video")
+        (response/status 303))))
 (defn action-delete-news [req]
   (let [id (get-in req [:params :id])]
     (db/delete-news! id)

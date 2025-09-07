@@ -1,0 +1,29 @@
+<h1>editer un e video</h1>
+<form action="/action_update_video" method="post">
+<input value="%s" id="myid" name="id" type="hidden"/>
+
+<div class="field">
+<label for="mytitle">
+Title
+</label>
+<input value="%s" id="mytitle" name="title" type="text"/>
+</div>
+<div class="field">
+<label for="mybody">
+Body
+</label>
+<textarea id="mybody" name="body"> %s
+</textarea>
+</div>
+<div class="field">
+<label for="myurl">
+video
+</label>
+<input value="%s" id="myurl" name="video" type="text"/>
+</div>
+<div class="actions">
+<input id="submitbath" name="envoyer" value="editer une video" type="submit"/>
+</div>
+</form>
+<a href="/voir_video/%s">revenir a la video</a>
+
