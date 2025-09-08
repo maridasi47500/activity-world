@@ -71,6 +71,14 @@
       (println tpl)
       tpl)
       )
+(defn replace-several-one-template [s replacements]
+  (reduce (fn [acc [match replacement]]
+            (if (and match replacement)
+              (clojure.string/replace acc match replacement)
+              acc))
+          s
+          replacements))
+
 
 (defn my-html
   "Render an HTML template from resources."
@@ -88,6 +96,22 @@
           s replacements))
 
 
+(defn render-collection-params-albums
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several template
+                 "$album_id" (str (:id %))
+                 "$title" (:title %)
+                 "$subtitle" (:subtitle %)
+) coll))
+               "<p>Il n'y a rien à afficher.</p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    body))
 (defn render-collection-params-photos
   "Render a collection of news into a template with name of params in view."
   [title coll template]
@@ -100,7 +124,7 @@
                "<p>Il n'y a rien à afficher.</p>")
         page (slurp (io/resource "index.html"))]
     (println "body:" body)
-    (format page title body)))
+    body))
 (defn render-collection-params-video
   "Render a collection of news into a template with name of params in view."
   [title coll template]
@@ -110,12 +134,14 @@
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several template
                  "$title" (:title %)
+                 "$video_id" (str (:id %))
                  "$myvideo" (:myvideo %)
                  "$content" (:content %)) coll))
                "<p>Il n'y a rien à afficher.</p>")
         page (slurp (io/resource "index.html"))]
     (println "body:" body)
-    (format page title body)))
+    ;(format page title body)
+    body))
 (defn render-collection-params
   "Render a collection of news into a template with name of params in view."
   [title coll template]
@@ -124,6 +150,7 @@
   (println "template:" template)
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several template
+                 "$id" (str (:id %))
                  "$title" (:title %)
                  "$image" (:image %)
                  "$content" (:content %)) coll))
@@ -191,6 +218,9 @@
 
 
 
+    [:div
+         "post a new album"
+      ]
 
 [:div (hf/form-to {:id "form-create-album"} [:post "/action_create_album"]
     [:div
@@ -215,6 +245,9 @@
 
 
 
+    [:div
+         "post a news"
+      ]
 
 
 
@@ -344,10 +377,10 @@
   (println "voir news handler reached")
   (response/content-type
     (response/response
-      (render-collection-params
+      (render-html "index.html" "voir news" (render-collection-params
         "Actualités"
         (db/get-news)
-        (slurp (io/resource "_news.html"))))
+        (slurp (io/resource "_news.html")))))
     "text/html"))
 
 
@@ -423,23 +456,36 @@
       (render-pic somepic)
       (response/not-found "image not found"))))
 
-
-(defn voir-album-id [req]
+(defn voir-video-id [req]
   (let [id (get-in req [:params :id])
-        news (db/get-album-by-id id)]
+        hey (slurp (io/resource "voirvideo.html"))
+        news (db/get-video-by-id id)]
     (if news
       (response/content-type
-        (response/response (render-html "voiralbums.html" "hey" "wow" (:title news) (:content news) (:url news)))
+        (response/response 
+          (render-html "index.html" 
+                       "voir la video" 
+                       (replace-several-one-template hey
+                         {"$video" (str (:myvideo news))
+                          "$title" (:title news)
+                          "$content" (:content news)})))
         "text/html")
       (response/not-found "album not found"))))
+
 (defn voir-news-id [req]
-  (let [id (get-in req [:params :id])
-        news (db/get-news-by-id id)]
-    (if news
-      (response/content-type
-        (response/response (render-html "voirnews.html" "hey" "wow" (:title news) (:content news) (:url news)))
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voirnewsid.html"))
+news (db/get-news-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {"$image" (str (:image news))
+                 "$title" (:title news)
+                 "$content" (:content news)}
+) ))
         "text/html")
-      (response/not-found "News not found"))))
+      (response/not-found "album not found"))))
+
 
 (defn edit-video-id [req]
   (let [id (get-in req [:params :id])
@@ -471,11 +517,15 @@
         (response/status 303))))
 
 (defn voir-photos-by-album [req]
-  (let [album_id (get-in req [:params :album_id])
+  (let [album_id (get-in req [:params :id])
+        album (db/get-album-by-id album_id)
         photos (db/get-photos-by-album album_id)
         html (replace-several
                (mes-mots "index.html" "voir un album" "renderalbum.html")
-               "$allphotos"
+               "$album_id" album_id
+               "$title" (:title album)
+               "$content" (:subtitle album)
+               "$allphotos" 
                (render-collection-params-photos
                  "Photos"
                  photos
@@ -486,10 +536,10 @@
 (defn voir-albums [req]
   (response/content-type
     (response/response
-      (render-collection-params
+      (render-html "index.html" "voir albums" (render-collection-params-albums
         "Albums"
         (db/get-albums)
-        (slurp (io/resource "_album.html"))))
+        (slurp (io/resource "_album.html")))))
     "text/html"))
 
 (defn poster-album [req]
@@ -497,6 +547,25 @@
     (response/response (render-html "index.html" "ajouter un album" (form-album-page req)))
     "text/html"))
 
+(defn action-create-album [request]
+  (let [params (:multipart-params request)
+        title (get params "album[title]")
+        subtitle (get params "album[subtitle]")]
+    (if (and title subtitle)
+      (let [album (db/insert-album! {:title title :subtitle subtitle})
+            album_id (:id album)]
+        (println "to insert album id" title subtitle album_id)
+        ;; Retourne une réponse JSON
+         
+        (response/content-type
+         (response/response (replace-several (render-json "indexalbum.json")
+                                "$album_id" (str album_id)))
+         "application/json"))
+      ;; Champs manquants
+      (response/content-type
+       (response/response (replace-several (render-json "myphotoform.json") 
+                                ))
+       "application/json"))))
 (defn action-create-photo [request]
   (let [params (:multipart-params request)
         album_id (get params "photo[album_id]")
@@ -514,7 +583,7 @@
         ;; Enregistre en base
         (println "photo to insert album id" album_id myphoto)
         (db/insert-photo! {:album_id album_id
-                          :myphoto myphoto})
+                          :myphoto filename})
         ;; Retourne une réponse JSON
         (response/content-type
          (response/response (replace-several (render-json "indexalbum.json")
@@ -526,11 +595,6 @@
                                 "$album_id" album_id))
        "application/json"))))
 
-(defn action-create-album [request]
-  (let [params (:form-params request)]
-    (db/insert-album! params)
-    (-> (response/redirect "/render_albums")
-        (response/status 303))))
 ;;;;
 
 (defn action-delete-photo [req]
@@ -556,16 +620,19 @@
 (defn voir-videos [req]
   (response/content-type
     (response/response
-      (render-collection-params-video
+      (render-html "index.html" "voir videos" (render-collection-params-video
         "Vidéos"
         (db/get-videos)
-        (slurp (io/resource "_video.html"))))
+        (slurp (io/resource "_video.html")))))
     "text/html"))
 (defn form-video-page
   [req]
     (str/replace (hic-p/html5 
 
 
+    [:div
+         "post a new video"
+      ]
 
 
 
@@ -591,13 +658,16 @@
  (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
 	 )
 (defn form-photo-page
-[req album_id]
+[req album_id mytitle]
 (str/replace (hic-p/html5 
 
 
 
 
 
+[:div
+ (str "ajouter une photo à l'album " mytitle)
+]
 
 [:div (hf/form-to {:id "form-create-photo"} [:post "/action_create_photo"]
 [:div
@@ -621,9 +691,12 @@
 "text/html"))
 
 (defn poster-photo [req album_id]
+  (let [album (db/get-album-by-id album_id)
+        photos (db/get-photos-by-album album_id)]
+
 (response/content-type
-(response/response (render-html "index.html" "ajouter une photo a un album" (form-photo-page req album_id)))
-"text/html"))
+(response/response (render-html "index.html" "ajouter une photo a un album" (form-photo-page req album_id (str (:title album) (:subtitle album)))))
+"text/html")))
 
 
 (defn not-found-handler [_]

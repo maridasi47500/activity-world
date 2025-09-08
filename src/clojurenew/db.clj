@@ -93,7 +93,14 @@
 
 ;; ALBUM_PHOTO
 (defn insert-album! [params]
-  (jdbc/insert! db-spec :album_photo params))
+  (let [result (jdbc/insert! db-spec :album_photo params)
+        album (first result)
+        album-id (get album (keyword "last_insert_rowid()"))]
+    (println "Raw insert result:" album)
+    (println "Extracted album ID:" album-id)
+    (println "Album keys:" (keys album))
+    {:id album-id :title (:title params) :subtitle (:subtitle params)}))
+
 
 (defn get-albums []
   (jdbc/query db-spec ["select * from album_photo ORDER BY timestamp DESC"]))

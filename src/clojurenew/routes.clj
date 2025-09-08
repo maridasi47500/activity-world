@@ -34,13 +34,14 @@
   (POST "/action_create_video" req 
      (println "Handler reached! Params: " req)
      (h/action-create-video req))
+  (GET "/video/:id" [id :as req] (h/voir-video-id (assoc-in req [:params :id] id)))
   (GET "/edit_video/:id" [id :as req] (h/edit-video-id (assoc-in req [:params :id] id)))
   (POST "/action_update_video" req (h/action-update-video req))
   (POST "/deletevideo/:id" [id :as req] (h/action-delete-video (assoc-in req [:params :id] id)))
 
   ;; ALBUM_PHOTO
   (GET "/render_albums" req (h/voir-albums req))
-  (GET "/album/:id" [id :as req] (h/voir-album-id (assoc-in req [:params :id] id)))
+  (GET "/album/:id/photos" [id :as req] (h/voir-photos-by-album (assoc-in req [:params :id] id)))
   (GET "/poster_album" [req] (h/poster-album req))
   (POST "/action_create_album" req (h/action-create-album req))
   (POST "/deletealbum/:id" [id :as req] (h/action-delete-album (assoc-in req [:params :id] id)))
