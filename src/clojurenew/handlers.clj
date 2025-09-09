@@ -23,6 +23,7 @@
         title (get params "news[title]")
         content (get params "news[content]")
         photo (get params "news[photo]")
+
         filename (:filename photo)
         tempfile (:tempfile photo)
         target-path (str "resources/public/uploads/" filename)]
@@ -211,7 +212,7 @@
 
          (hf/submit-button "Submit"))]);)
 (defn form-album-edit
-  [req title subtitle id]
+  [title subtitle id]
     (str/replace (hic-p/html5 
 
 
@@ -269,7 +270,7 @@
                  )
 
 (defn form-news-edit
-  [req title image content id]
+  [title image content id]
     (str/replace (hic-p/html5 
 
 
@@ -291,13 +292,14 @@
          (hf/label "news[title]" "title")    
          (hf/text-field "news[title]" title)    
       ]
-    [:div
-         (hf/hidden-field "news[photo]" photo)    
-      ]
+
 
     [:div
          (hf/label "news[photo]" "photo")    
          (hf/file-upload "news[photo]")    
+      ]
+    [:div
+         ;(hf/hidden-field "news[photo]" image)    
       ]
     [:div
          (hf/label "news[content]" "content")    
@@ -434,14 +436,19 @@
 
   (let [params (:multipart-params request)
         id      (get params "news[id]")
+        news (db/get-news-by-id id)
         title   (get params "news[title]")
         content (get params "news[content]")
-        photo   (get params "news[photo]")]
+        photo   (get params "news[photo]")
+        mysize (:size photo)
+         ]
 
     (if (and title content)
       (do
         ;; Check if photo is a valid file map
         (if (and (map? photo)
+                 (not= mysize 0)
+
                  (:tempfile photo)
                  (:filename photo))
           (let [filename      (:filename photo)
@@ -464,6 +471,7 @@
             (println "No new photo — keeping existing image.")
             (db/update-news! {:id id
                               :title title
+                              :image (:image news)
                               :content content})))
 
         ;; Return success response
@@ -524,10 +532,10 @@
   (println "voir news handler reached")
   (response/content-type
     (response/response
-      (render-html "index.html" "voir news" (render-collection-params
-        "Actualités"
+      (render-collection-params
+        "voir les news"
         (db/get-news)
-        (slurp (io/resource "_news.html")))))
+        (slurp (io/resource "_news.html"))))
     "text/html"))
 
 
@@ -613,7 +621,8 @@
           (render-html "index.html" 
                        "voir la video" 
                        (replace-several-one-template hey
-                         {"$video" (str (:myvideo news))
+                         {"$myvideo" (str (:myvideo news))
+                          "$video_id" (str (:id news))
                           "$title" (:title news)
                           "$content" (:content news)})))
         "text/html")
@@ -628,11 +637,46 @@ news (db/get-news-by-id id)]
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {"$image" (str (:image news))
                  "$title" (:title news)
-                 "$id" (:id news)
+                 "$news_id" (str (:id news))
                  "$content" (:content news)}
 ) ))
         "text/html")
       (response/not-found "album not found"))))
+(defn form-video-edit
+  [title content myvideo id]
+    (str/replace (hic-p/html5 
+
+
+    [:div
+         "edit a new video"
+      ]
+
+
+
+
+[:div (hf/form-to {:id "form-edit-video"} [:post "/action_update_video"]
+    [:div
+         (anti-forgery-field)
+         (hf/hidden-field "video[id]" id)    
+      ]
+
+
+    [:div
+         (hf/label "video[title]" "title")    
+         (hf/text-field "video[title]" title)    
+      ]
+    [:div
+
+         (hf/label "video[myvideo]" "video")    
+ (hf/file-upload "video[myvideo]")    
+ ;(hf/hidden-field "video[myvideo]" myvideo)    
+]
+[:div
+ (hf/label "video[content]" "content")    
+ (hf/text-area "video[content]" content)    
+]
+ (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+	 )
 
 
 (defn edit-video-id [req]
@@ -648,7 +692,6 @@ news (db/get-news-by-id id)]
       (response/not-found "album not found"))))
 (defn edit-album-id [req]
   (let [id (get-in req [:params :id])
-        hey (slurp (io/resource "formeditalbum.html"))
         news (db/get-album-by-id id)]
     (if news
       (response/content-type
@@ -660,7 +703,6 @@ news (db/get-news-by-id id)]
       (response/not-found "album not found"))))
 (defn edit-news-id [req]
   (let [id (get-in req [:params :id])
-        hey (slurp (io/resource "formeditnews.html"))
         news (db/get-news-by-id id)]
     (if news
       (response/content-type
@@ -682,15 +724,21 @@ news (db/get-news-by-id id)]
   (println "yeah")
 
   (let [params   (:multipart-params request)
-        id       (get params "news[id]")
+        id       (get params "video[id]")
+        news (db/get-video-by-id id)
         title    (get params "video[title]")
         content  (get params "video[content]")
-        myvideo  (get params "video[myvideo]")]
+        oldvideo (:myvideo news)
 
-    (if (and title content)
+        myvideo  (get params "video[myvideo]")
+        mysize (:size myvideo)
+          ]
+
+    (if (and id title content)
       (do
         ;; If a new video file is uploaded
         (if (and (map? myvideo)
+                 (pos? mysize)
                  (:tempfile myvideo)
                  (:filename myvideo))
           (let [filename       (:filename myvideo)
@@ -713,6 +761,7 @@ news (db/get-news-by-id id)]
             (println "No new video — keeping existing file.")
             (db/update-video! {:id id
                                :title title
+                               :myvideo oldvideo
                                :content content})))
 
         ;; Return success response
@@ -735,7 +784,7 @@ news (db/get-news-by-id id)]
         photos (db/get-photos-by-album album_id)
         html (replace-several
                (mes-mots "index.html" "voir un album" "renderalbum.html")
-               "$album_id" album_id
+               "$album_id" (str album_id)
                "$title" (:title album)
                "$content" (:subtitle album)
                "$allphotos" 
@@ -800,12 +849,12 @@ news (db/get-news-by-id id)]
         ;; Retourne une réponse JSON
         (response/content-type
          (response/response (replace-several (render-json "indexalbum.json")
-                                "$album_id" album_id))
+                                "$album_id" (str album_id)))
          "application/json"))
       ;; Champs manquants
       (response/content-type
        (response/response (replace-several (render-json "myphotoform.json") 
-                                "$album_id" album_id))
+                                "$album_id" (str album_id)))
        "application/json"))))
 
 ;;;;
@@ -838,40 +887,7 @@ news (db/get-news-by-id id)]
         (db/get-videos)
         (slurp (io/resource "_video.html")))))
     "text/html"))
-(defn form-video-edit
-  [req title content myvideo id]
-    (str/replace (hic-p/html5 
 
-
-    [:div
-         "edit a new video"
-      ]
-
-
-
-
-[:div (hf/form-to {:id "form-edit-video"} [:post "/action_update_video"]
-    [:div
-         (anti-forgery-field)
-         (hf/hidden-field "video[id]" id)    
-      ]
-
-
-    [:div
-         (hf/label "video[title]" "title")    
-         (hf/text-field "video[title]" title)    
-      ]
-    [:div
- (hf/hidden-field "video[myvideo]" myvideo)    
-         (hf/label "video[myvideo]" "video")    
- (hf/file-upload "video[myvideo]")    
-]
-[:div
- (hf/label "video[content]" "content")    
- (hf/text-area "video[content]" content)    
-]
- (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
-	 )
 
 
 (defn form-video-page
