@@ -36,6 +36,7 @@
      (h/action-create-video req))
   (GET "/video/:id" [id :as req] (h/voir-video-id (assoc-in req [:params :id] id)))
   (GET "/edit_video/:id" [id :as req] (h/edit-video-id (assoc-in req [:params :id] id)))
+  (POST "/action_update_album" req (h/action-update-album req))
   (POST "/action_update_video" req (h/action-update-video req))
   (POST "/deletevideo/:id" [id :as req] (h/action-delete-video (assoc-in req [:params :id] id)))
 
@@ -52,6 +53,8 @@
   (POST "/action_create_photo" req (h/action-create-photo req))
   (POST "/deletephoto/:id" [id :as req] (h/action-delete-photo (assoc-in req [:params :id] id)))
   (GET "/clear-session" [] h/clear-session)
+  (GET "/edit_news/:id" [id :as req] (h/edit-news-id (assoc-in req [:params :id] id)))
+  (GET "/edit_album/:id" [id :as req] (h/edit-album-id (assoc-in req [:params :id] id)))
   (GET "/poster_news"  [req] (h/poster-news req))
 ;(mp/wrap-multipart-params 
   (POST "/action_create_news" req

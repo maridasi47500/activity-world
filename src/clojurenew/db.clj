@@ -68,10 +68,14 @@
   (jdbc/insert! db-spec :news
                 {:title title :content content :image image}))
 
-(defn update-news! [{:keys [id title url content image]}]
+(defn update-news! [{:keys [id title content image]}]
   (jdbc/execute! db-spec
     ["update news set title = ?, content = ?, image = ? where id = ?"
      title content image id]))
+(defn update-video! [{:keys [id title content myvideo]}]
+  (jdbc/execute! db-spec
+    ["update video set title = ?, content = ?, myvideo = ? where id = ?"
+     title content myvideo id]))
 
 (defn delete-news! [id]
   (jdbc/delete! db-spec :news ["id=?" id]))
@@ -85,8 +89,6 @@
 (defn get-video-by-id [id]
   (first (jdbc/query db-spec ["select * from video where id = ?" id])))
 
-(defn update-video! [params]
-  (jdbc/update! db-spec :video params ["id=?" (:id params)]))
 
 (defn delete-video! [id]
   (jdbc/delete! db-spec :video ["id=?" id]))
