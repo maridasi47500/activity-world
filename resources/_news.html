@@ -3,8 +3,9 @@
 <td><img src="/uploads/$image" with="100" height="100" /></td>
 <td>$content</td>
 <td><a href="/voir_news/$id">voir news</a></td>
-<td><form action="/deletebooking" onsubmit="return confirm('etes vous sure de vouloir supprimer la reservation du %s?');" method="post">
-<input type="hidden" value="%s" name="myid"/>
+<td><form id="form-delete-news" action="/delete_news/$id" onsubmit="return confirm('etes vous sure de vouloir supprimer la reservation du %s?');" method="post">
+$token
+
 <input type="submit" value="supprimer" name="supprimer"/>
 </form>
 </td>

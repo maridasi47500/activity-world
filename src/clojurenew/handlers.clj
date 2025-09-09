@@ -7,6 +7,7 @@
 
   (:require [hiccup.page :as hic-p]
             [hiccup.element :as hic-e]
+            [ring.util.anti-forgery :as af]
             [hiccup.def :as hic-d]
             [hiccup2.core :as hic-c]
             [hiccup.form :as hf]
@@ -107,6 +108,8 @@
                (str/join "" (map #(replace-several template
                  "$album_id" (str (:id %))
                  "$title" (:title %)
+               "$token" (anti-forgery-field)
+
                  "$subtitle" (:subtitle %)
 ) coll))
                "<p>Il n'y a rien à afficher.</p>")
@@ -121,6 +124,8 @@
   (println "template:" template)
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several template
+                 "$id" (:id %)
+               "$token" (anti-forgery-field)
                  "$myphoto" (:myphoto %)) coll))
                "<p>Il n'y a rien à afficher.</p>")
         page (slurp (io/resource "index.html"))]
@@ -135,6 +140,7 @@
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several template
                  "$title" (:title %)
+               "$token" (anti-forgery-field)
                  "$video_id" (str (:id %))
                  "$myvideo" (:myvideo %)
                  "$content" (:content %)) coll))
@@ -151,6 +157,7 @@
   (println "template:" template)
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several template
+               "$token" (anti-forgery-field)
                  "$id" (str (:id %))
                  "$title" (:title %)
                  "$image" (:image %)
@@ -860,25 +867,35 @@ news (db/get-news-by-id id)]
 ;;;;
 
 (defn action-delete-photo [req]
-  (let [id (get-in req [:params :id])]
+  (let [id (get-in req [:params :id])
+        photo (db/get-album-by-id id)
+        album_id (:album_id photo)]
     (db/delete-photo! id)
-    (-> (response/redirect "/voir_photo")
-        (response/status 303))))
+    (response/content-type
+     (response/response (str "{\"redirect\":\"/album/" album_id "/photos\"}"))
+     "application/json")))
+
 (defn action-delete-album [req]
   (let [id (get-in req [:params :id])]
     (db/delete-album! id)
-    (-> (response/redirect "/voir_album")
-        (response/status 303))))
+    (response/content-type
+     (response/response "{\"redirect\":\"/render_albums\"}")
+     "application/json")))
+
 (defn action-delete-video [req]
   (let [id (get-in req [:params :id])]
     (db/delete-video! id)
-    (-> (response/redirect "/voir_video")
-        (response/status 303))))
+    (response/content-type
+     (response/response "{\"redirect\":\"/render_videos\"}")
+     "application/json")))
+
 (defn action-delete-news [req]
   (let [id (get-in req [:params :id])]
     (db/delete-news! id)
-    (-> (response/redirect "/voir_news")
-        (response/status 303))))
+    (response/content-type
+     (response/response "{\"redirect\":\"/render_news\"}")
+     "application/json")))
+
 (defn voir-videos [req]
   (response/content-type
     (response/response

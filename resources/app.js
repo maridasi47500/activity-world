@@ -6,7 +6,7 @@ var now = new Date(),
 $(function(){
 //$('.carousel').carousel();
 
-$('#form-edit-news, #form-edit-video, #form-edit-photo, #form-edit-album, #form-create-news, #form-create-video, #form-create-photo, #form-create-album').on('submit', function () {
+$('#form-delete-news, #form-delete-video, #form-delete-photo, #form-delete-album,#form-edit-news, #form-edit-video, #form-edit-photo, #form-edit-album, #form-create-news, #form-create-video, #form-create-photo, #form-create-album').on('submit', function () {
   var fd = new FormData($(this)[0]);    
 
   if (window.filesize > 1024*1024*10) {

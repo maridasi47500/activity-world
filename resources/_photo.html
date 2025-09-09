@@ -1,1 +1,6 @@
 <img class="photo1" src="/uploads/$myphoto" />
+<form id="form-delete-photo" action="/delete_photo/$id" onsubmit="return confirm('etes vous sure de vouloir supprimer la reservation du %s?');" method="post">
+$token
+
+<input type="submit" value="supprimer" name="supprimer"/>
+</form>

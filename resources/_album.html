@@ -5,4 +5,9 @@
 <p>
 $subtitle
 </p>
+<form id="form-delete-album" action="/delete_album/$album_id" onsubmit="return confirm('etes vous sure de vouloir supprimer la reservation du %s?');" method="post">
+$token
+
+<input type="submit" value="supprimer" name="supprimer"/>
+</form>
 </div>
