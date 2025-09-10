@@ -2,7 +2,12 @@
   "Ring handlers for Activity World."
   (:gen-class)
   (:use ring.adapter.jetty)
-  (:import [javax.imageio ImageIO]
+  (:import [org.ocpsoft.prettytime PrettyTime]
+           [java.text SimpleDateFormat]
+           [java.time LocalDateTime ZonedDateTime ZoneId Instant]
+           [java.time.format DateTimeFormatter]
+           [java.util Date Locale]
+           [javax.imageio ImageIO]
            [java.io ByteArrayInputStream ByteArrayOutputStream File])
 
   (:require [hiccup.page :as hic-p]
@@ -18,7 +23,41 @@
             [ring.util.anti-forgery :refer [anti-forgery-field]]
             [clojure.walk :refer [keywordize-keys]]
             [ring.util.response :as response]
+            
             [ring.util.codec :as codec]))
+
+
+(def formatter (DateTimeFormatter/ofPattern "yyyy-MM-dd HH:mm:ss"))
+(defn parse-timestamp [ts-str]
+  ;; Assuming ts-str is like "2025-09-09T22:58:00Z"
+  (-> ts-str
+      (LocalDateTime/parse formatter)
+      ;(.atZone (ZoneId/of "America/")))) ;;  Time
+      (.atZone (ZoneId/of "Europe/London")))) ;;  Time
+
+(defn time-ago [ts-str lang-code]
+  (let [locale (Locale. lang-code)
+        zoned-date (parse-timestamp ts-str)
+        date (Date/from (.toInstant zoned-date))
+        pt (PrettyTime. locale)] ;; returns "fr", "en", etc
+    (.format pt date)))
+
+
+(defn parse-date [^String s]
+  (let [fmt (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")]
+    (.parse fmt s)))
+
+;(defn time-ago [^String timestamp-str ^Locale locale]
+;  (let [date (parse-date timestamp-str)
+;        pt (PrettyTime. locale)]
+;    (.format pt date)))
+
+
+(defn replace-template [template replacements]
+  (reduce (fn [acc [k v]]
+            (clojure.string/replace acc k v))
+          template
+          replacements))
 (defn handle-news [request]
   (let [params (:multipart-params request)
         title (get params "news[title]")
@@ -124,7 +163,7 @@
   (println "template:" template)
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several template
-                 "$id" (:id %)
+                 "$id" (str (:id %))
                "$token" (anti-forgery-field)
                  "$myphoto" (:myphoto %)) coll))
                "<p>Il n'y a rien à afficher.</p>")
@@ -362,10 +401,38 @@
 (defn mes-mots [template debut-mot-string fin-mot-html]
     (render-html (str template) (str debut-mot-string) (str (my-html fin-mot-html))))
 
+
 (defn home [_]
-  (response/content-type
-    (response/response (mes-mots "index.html" "title" "welcome.html"))
-    "text/html"))
+  (let [template (slurp (io/resource "welcome.html"))
+        live-schedule (str/join "" (map #(str "<p>" % "</p>") (db/get-latest-live-schedule)))
+        latest-news (str/join "" (map #(str (let [ago (time-ago (:timestamp %) "fr")]
+            (str "<div class=\"news-block\"><a href=\"/voir_news/" (:id %) "\">"
+                 "<p>" (:title %) "</p>"
+                 "<p><em>" ago "</em></p>"
+                 "</div>")) ) (db/get-latest-news)))
+        latest-videos (str/join "" (map #(str (let [ago (time-ago (:timestamp %) "fr")]
+            (str "<div class=\"video-block\"><a href=\"/video/" (:id %) "\">"
+                 "<video src=\"/uploads/" (:myvideo %) "\" width=\"200\" height=\"150\" controls></video></a>"
+                 "<p>" (:title %) "</p>"
+                 "<p><em>" ago "</em></p>"
+                 "</div>")) ) (db/get-latest-videos)))
+        latest-photos (str/join "" (map #(str (let [ago (time-ago (:timestamp %) "fr")]
+            (str "<div class=\"photo-block\"><a href=\"/album/" (:album_id %) "/photos\">"
+                 "<img src=\"/uploads/" (:myphoto %) "\" width=\"200\" height=\"150\" /></a>"
+                 "<p>" (:title %) "</p>"
+                 "<p><em>" ago "</em></p>"
+                 "</div>")) ) (db/get-latest-photos)))
+        filled-template (replace-template template
+                          {"$live_schedule" live-schedule
+                           "$latest_news" latest-news
+                           "$latest_videos" latest-videos
+                           "$latest_photos" latest-photos})
+        page (slurp (io/resource "index.html"))
+        final-page (render-html "index.html" 
+                       "bienvenue " filled-template)]
+    (response/content-type
+      (response/response final-page)
+      "text/html")))
 (defn sanitize-filename [filename]
   (-> filename
       (str/replace #"[^a-zA-Z0-9._-]" "_")

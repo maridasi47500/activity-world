@@ -7,6 +7,7 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [javax.xml.bind/jaxb-api "2.3.1"]
                  [http-kit "2.2.0"]
+                 [org.ocpsoft.prettytime/prettytime "3.2.7.Final"]
                  [clj-time "0.14.0"]
                  [org.clojure/java.jdbc "0.7.12"]
                  [metosin/jsonista "0.3.8"]

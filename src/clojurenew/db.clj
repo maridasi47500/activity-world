@@ -25,6 +25,18 @@
   (try
     (jdbc/db-do-commands
       db-spec
+      (jdbc/create-table-ddl :live_schedule
+        [[:id "integer primary key autoincrement"]
+         [:timestamp :datetime :default :current_timestamp]
+         [:title :text]
+         [:city :text]
+         [:mydate :date]
+         [:mytime :time]]))
+    (catch Exception e
+      (println "Album table: " (.getMessage e))))
+  (try
+    (jdbc/db-do-commands
+      db-spec
       (jdbc/create-table-ddl :album_photo
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
@@ -56,6 +68,14 @@
     (catch Exception e
       (println "DB already exists or error:" (.getMessage e)))))
 
+(defn get-latest-live-schedule []
+  (jdbc/query db-spec ["select ( title | ' ' | mydate | ' ' | city) from live_schedule ORDER BY timestamp DESC limit 3"]))
+(defn get-latest-news []
+  (jdbc/query db-spec ["select * from news ORDER BY timestamp DESC limit 3"]))
+(defn get-latest-photos []
+  (jdbc/query db-spec ["select * from photo ORDER BY timestamp DESC limit 3"]))
+(defn get-latest-videos []
+  (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC limit 3"]))
 (defn get-news []
   (jdbc/query db-spec ["select * from news ORDER BY timestamp DESC"]))
 
