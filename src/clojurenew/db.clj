@@ -14,6 +14,44 @@
   (try
     (jdbc/db-do-commands
       db-spec
+      (jdbc/create-table-ddl :athlete
+        [[:id "integer primary key autoincrement"]
+         [:timestamp :datetime :default :current_timestamp]
+         [:name :text]
+         [:country :text]
+         [:birthdate :date]
+         [:activity_id :integer]]))
+    (catch Exception e
+      (println "Athlete table: " (.getMessage e))))
+
+  (try
+  (jdbc/db-do-commands
+    db-spec
+    (jdbc/create-table-ddl :event
+      [[:id "integer primary key autoincrement"]
+       [:timestamp :datetime :default :current_timestamp]
+       [:date_debut :date]
+       [:date_fin :date]
+       [:ville :text]
+       [:pays :text]
+       [:title :text]
+       ]))
+  (catch Exception e
+    (println "Event table: " (.getMessage e))))
+
+  (try
+  (jdbc/db-do-commands
+    db-spec
+    (jdbc/create-table-ddl :activity
+      [[:id "integer primary key autoincrement"]
+       [:timestamp :datetime :default :current_timestamp]
+       [:titlestring :text]]))
+  (catch Exception e
+    (println "Activity table: " (.getMessage e))))
+
+  (try
+    (jdbc/db-do-commands
+      db-spec
       (jdbc/create-table-ddl :video
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
@@ -27,9 +65,11 @@
       db-spec
       (jdbc/create-table-ddl :live_schedule
         [[:id "integer primary key autoincrement"]
+         [:event_id :integer]
+         [:activity_id :integer]
+
          [:timestamp :datetime :default :current_timestamp]
          [:title :text]
-         [:city :text]
          [:mydate :date]
          [:mytime :time]]))
     (catch Exception e
@@ -37,9 +77,23 @@
   (try
     (jdbc/db-do-commands
       db-spec
+      (jdbc/create-table-ddl :result
+        [[:id "integer primary key autoincrement"]
+         [:timestamp :datetime :default :current_timestamp]
+         [:position :integer]
+         [:athlete_id :integer]
+         [:live_schedule_id :integer]]))
+    (catch Exception e
+      (println "Result table: " (.getMessage e))))
+
+  (try
+    (jdbc/db-do-commands
+      db-spec
       (jdbc/create-table-ddl :album_photo
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
+
+
          [:title :text]
          [:subtitle :text]]))
     (catch Exception e
@@ -62,6 +116,7 @@
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
          [:title :text]
+         [:activity_id :integer]
          [:content :text]
          [:image :text]
          ]))
@@ -148,3 +203,51 @@
 
 (defn delete-photo! [id]
   (jdbc/delete! db-spec :photo ["id=?" id]))
+(defn insert-activity! [params]
+  (jdbc/insert! db-spec :activity params))
+
+(defn get-activities []
+  (jdbc/query db-spec ["select * from activity ORDER BY timestamp DESC"]))
+
+(defn get-activity-by-id [id]
+  (first (jdbc/query db-spec ["select * from activity where id = ?" id])))
+
+(defn delete-activity! [id]
+  (jdbc/delete! db-spec :activity ["id=?" id]))
+
+(defn insert-event! [params]
+  (jdbc/insert! db-spec :event params))
+
+(defn get-events []
+  (jdbc/query db-spec ["select * from event ORDER BY timestamp DESC"]))
+
+(defn get-event-by-id [id]
+  (first (jdbc/query db-spec ["select * from event where id = ?" id])))
+
+(defn delete-event! [id]
+  (jdbc/delete! db-spec :event ["id=?" id]))
+
+(defn insert-result! [params]
+  (jdbc/insert! db-spec :result params))
+
+(defn get-results []
+  (jdbc/query db-spec ["select * from result ORDER BY timestamp DESC"]))
+
+(defn get-result-by-id [id]
+  (first (jdbc/query db-spec ["select * from result where id = ?" id])))
+
+(defn delete-result! [id]
+  (jdbc/delete! db-spec :result ["id=?" id]))
+
+(defn insert-athlete! [params]
+  (jdbc/insert! db-spec :athlete params))
+
+(defn get-athletes []
+  (jdbc/query db-spec ["select * from athlete ORDER BY timestamp DESC"]))
+
+(defn get-athlete-by-id [id]
+  (first (jdbc/query db-spec ["select * from athlete where id = ?" id])))
+
+(defn delete-athlete! [id]
+  (jdbc/delete! db-spec :athlete ["id=?" id]))
+
