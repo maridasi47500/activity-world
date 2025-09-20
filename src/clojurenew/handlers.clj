@@ -95,6 +95,31 @@
   (println "Multipart params:" (:multipart-params req))
   (println "Raw body class:" (class (:body req)))
   (response/response (wowjson/generate-string {:status "ok"})))
+(defn replace-params-template
+  "Replace all placeholders in the string using a map of replacements."
+  [s replacements]
+  (reduce (fn [acc [match replacement]]
+            (if (and match replacement)
+              (clojure.string/replace acc (re-pattern (java.util.regex.Pattern/quote match)) replacement)
+              acc))
+          s
+          replacements))
+
+(defn render-params-html
+  "Render an HTML template from resources, replacing all {{key}} placeholders using a map."
+  [template params]
+  (let [tpl (slurp (io/resource template))
+        replacements (map (fn [[k v]] [(str "{{" (name k) "}}") v]) params)]
+    (replace-params-template tpl replacements)))
+
+
+(defn replace-several-one-template [s replacements]
+  (reduce (fn [acc [match replacement]]
+            (if (and match replacement)
+              (clojure.string/replace acc match replacement)
+              acc))
+          s
+          replacements))
 
 (defn render-html
   "Render an HTML template from resources."
@@ -112,13 +137,7 @@
       (println tpl)
       tpl)
       )
-(defn replace-several-one-template [s replacements]
-  (reduce (fn [acc [match replacement]]
-            (if (and match replacement)
-              (clojure.string/replace acc match replacement)
-              acc))
-          s
-          replacements))
+
 
 
 (defn my-html
@@ -136,6 +155,21 @@
               s)) ; skip if either is nil
           s replacements))
 
+(defn render-collection-params-activities
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several template
+                 "$name" (str (:name %))
+                 "$id" (str (:id %))
+) coll))
+               "<p>Il n'y a rien à afficher. </p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    body))
 
 (defn render-collection-params-albums
   "Render a collection of news into a template with name of params in view."
@@ -402,6 +436,27 @@
     (render-html (str template) (str debut-mot-string) (str (my-html fin-mot-html))))
 
 
+(defn activites [_]
+  (let [template (slurp (io/resource "activites.html"))
+            latest-activities (str/join "" (map #(str (let [hey "hey"]
+            (str "<div class=\"activity\"><a href=\"/activity/" (:id %) "\">"
+                 "<div>" (:emoji %) "</div>"
+                 "<p>" (:title %) "</p>"
+                 "<p><em>" ago "</em></p>"
+                 "</div>")) ) (db/get-latest-photos)))
+        filled-template (replace-template template
+                          {"$live_schedule" live-schedule
+                           "$latest_news" latest-news
+                           "$latest_videos" latest-videos
+                           "$latest_photos" latest-photos}))
+        final-page (render-params-html "heyindex.html" 
+                       {:title "bienvenue " :content filled-template
+:activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")
+:activites (render-collection-params-activities "activites" (db/get-activities) "_activitysee.html")
+})]
+    (response/content-type
+      (response/response final-page)
+      "text/html")))
 (defn home [_]
   (let [template (slurp (io/resource "welcome.html"))
         live-schedule (str/join "" (map #(str "<p>" % "</p>") (db/get-latest-live-schedule)))
@@ -428,8 +483,10 @@
                            "$latest_videos" latest-videos
                            "$latest_photos" latest-photos})
         page (slurp (io/resource "index.html"))
-        final-page (render-html "index.html" 
-                       "bienvenue " filled-template)]
+        final-page (render-params-html "heyindex.html" 
+                       {:title "bienvenue " :content filled-template
+:activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")
+})]
     (response/content-type
       (response/response final-page)
       "text/html")))

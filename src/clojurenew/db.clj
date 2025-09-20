@@ -45,7 +45,8 @@
     (jdbc/create-table-ddl :activity
       [[:id "integer primary key autoincrement"]
        [:timestamp :datetime :default :current_timestamp]
-       [:titlestring :text]]))
+       [:emoji text]
+       [:name :text]]))
   (catch Exception e
     (println "Activity table: " (.getMessage e))))
 
@@ -124,7 +125,7 @@
       (println "DB already exists or error:" (.getMessage e)))))
 
 (defn get-latest-live-schedule []
-  (jdbc/query db-spec ["select ( title | ' ' | mydate | ' ' | city) from live_schedule ORDER BY timestamp DESC limit 3"]))
+  (jdbc/query db-spec ["select ( title | ' ' | mydate | ' ') from live_schedule ORDER BY timestamp DESC limit 3"]))
 (defn get-latest-news []
   (jdbc/query db-spec ["select * from news ORDER BY timestamp DESC limit 3"]))
 (defn get-latest-photos []

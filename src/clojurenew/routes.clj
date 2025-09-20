@@ -72,7 +72,9 @@
 
   ;; Home and hello
   (GET "/hello" [] h/home)
+
   (GET "/" [] h/home)
+  (GET "/activites" [] h/activites)
 
   ;; News: routes preserved as in original code
 
