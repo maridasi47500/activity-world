@@ -45,7 +45,7 @@
     (jdbc/create-table-ddl :activity
       [[:id "integer primary key autoincrement"]
        [:timestamp :datetime :default :current_timestamp]
-       [:emoji text]
+       [:emoji :text]
        [:name :text]]))
   (catch Exception e
     (println "Activity table: " (.getMessage e))))

@@ -438,25 +438,24 @@
 
 (defn activites [_]
   (let [template (slurp (io/resource "activites.html"))
-            latest-activities (str/join "" (map #(str (let [hey "hey"]
-            (str "<div class=\"activity\"><a href=\"/activity/" (:id %) "\">"
-                 "<div>" (:emoji %) "</div>"
-                 "<p>" (:title %) "</p>"
-                 "<p><em>" ago "</em></p>"
-                 "</div>")) ) (db/get-latest-photos)))
+        latest-activities (str/join ""
+          (map #(str "<div class=\"activity\"><a href=\"/activity/" (:id %) "\">"
+                     "<div>" (:emoji %) "</div>"
+                     "<p>" (:title %) "</p>"
+                     "</div>")
+               (db/get-latest-photos)))
         filled-template (replace-template template
-                          {"$live_schedule" live-schedule
-                           "$latest_news" latest-news
-                           "$latest_videos" latest-videos
-                           "$latest_photos" latest-photos}))
-        final-page (render-params-html "heyindex.html" 
-                       {:title "bienvenue " :content filled-template
-:activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")
-:activites (render-collection-params-activities "activites" (db/get-activities) "_activitysee.html")
-})]
+                         {
+                          "$latest_activities" latest-activities})
+        final-page (render-params-html "heyindex.html"
+                      {:title "bienvenue"
+                       :content filled-template
+                       :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")
+                       :activites (render-collection-params-activities "activites" (db/get-activities) "_activitysee.html")})]
     (response/content-type
       (response/response final-page)
       "text/html")))
+
 (defn home [_]
   (let [template (slurp (io/resource "welcome.html"))
         live-schedule (str/join "" (map #(str "<p>" % "</p>") (db/get-latest-live-schedule)))
