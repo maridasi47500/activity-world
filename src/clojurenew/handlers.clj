@@ -162,7 +162,8 @@
   (println "title:" title)
   (println "template:" template)
   (let [body (if (seq coll)
-               (str/join "" (map #(replace-several template
+               (str/join "" (map #(replace-several (slurp (io/resource template))
+                 "$emoji" (str (:emoji %))
                  "$name" (str (:name %))
                  "$id" (str (:id %))
 ) coll))
@@ -450,6 +451,7 @@
         final-page (render-params-html "heyindex.html"
                       {:title "bienvenue"
                        :content filled-template
+                        :token (anti-forgery-field)
                        :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")
                        :activites (render-collection-params-activities "activites" (db/get-activities) "_activitysee.html")})]
     (response/content-type
@@ -758,6 +760,19 @@
         "text/html")
       (response/not-found "album not found"))))
 
+(defn voir-activity-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivityid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {"$name" (str (:name news))
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
 (defn voir-news-id [req]
 (let [id (get-in req [:params :id])
         hey (slurp (io/resource "voirnewsid.html"))
@@ -988,6 +1003,26 @@ news (db/get-news-by-id id)]
        "application/json"))))
 
 ;;;;
+(defn action-create-activity [request]
+  (let [params (:multipart-params request)
+        name (get params "activity[name]")
+        emoji (get params "activity[emoji]")]
+    (if (and name emoji)
+      (do
+        (println "yeeeeeeees wow")
+        (db/insert-activity! {:name name 
+                          :emoji emoji})
+        ;; Retourne une réponse JSON
+        (response/content-type
+         (response/response (replace-several (render-json "indexactivity.json")
+                                ))
+         "application/json"))
+      ;; Champs manquants
+      (response/content-type
+       (response/response (replace-several (render-json "indexactivity.json") 
+                                ))
+       "application/json"))))
+
 
 (defn action-delete-photo [req]
   (let [id (get-in req [:params :id])

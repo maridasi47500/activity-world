@@ -75,6 +75,8 @@
 
   (GET "/" [] h/home)
   (GET "/activites" [] h/activites)
+  (POST "/addactivity" [] h/action-create-activity)
+  (GET "/activity/:id" [id :as req] (h/voir-activity-id (assoc-in req [:params :id] id)))
 
   ;; News: routes preserved as in original code
 

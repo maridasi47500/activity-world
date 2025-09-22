@@ -6,6 +6,7 @@ end = 129349
 
 # Keywords to filter sport-related emojis
 keywords = [
+"swim", "swimming",
     "sport", "medal", "trophy", "ball", "football", "basketball", "tennis",
     "volleyball", "rugby", "cricket", "ping pong", "badminton", "hockey",
     "ski", "snowboard", "skate", "curling", "wrestling", "swimming", "surfing",
