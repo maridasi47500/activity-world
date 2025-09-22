@@ -159,6 +159,12 @@
 (defn insert-video! [params]
   (jdbc/insert! db-spec :video params))
 
+(defn get-videos-world-record []
+  (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
+(defn get-videos-gold-woman []
+  (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
+(defn get-videos-gold-man []
+  (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
 (defn get-videos []
   (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
 

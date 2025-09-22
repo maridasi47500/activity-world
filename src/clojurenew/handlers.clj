@@ -767,7 +767,20 @@ news (db/get-activity-by-id id)]
 (if news
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
-                 {"$name" (str (:name news))
+                 {
+"$worldrecord" (render-collection-params-video
+        "Vidéos"
+        (db/get-videos-world-record)
+        (slurp (io/resource "_voirvideo.html")))
+"$goldmedalman" (render-collection-params-video
+        "Vidéos"
+        (db/get-videos-gold-man)
+        (slurp (io/resource "_voirvideo.html")))
+"$goldmedalwoman" (render-collection-params-video
+        "Vidéos"
+        (db/get-videos-gold-woman)
+        (slurp (io/resource "_voirvideo.html")))
+"$name" (str (:name news))
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
