@@ -20,7 +20,7 @@
          [:name :text]
          [:country :text]
          [:birthdate :date]
-         [:activity_id :integer]]))
+        ]))
     (catch Exception e
       (println "Athlete table: " (.getMessage e))))
 
@@ -81,7 +81,7 @@
       (jdbc/create-table-ddl :result
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
-         [:position :integer]
+         [:mytime :time]
          [:athlete_id :integer]
          [:live_schedule_id :integer]]))
     (catch Exception e

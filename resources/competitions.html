@@ -1,1 +1,38 @@
 <h1>competitions</h1>
+<form action="createcompetitions" method="post">
+  <!-- Title Field -->
+  <div class="field">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required>
+  </div>
+
+  <!-- Start Date Field -->
+  <div class="field">
+    <label for="datedebut">Start Date:</label>
+    <input type="date" id="datedebut" name="datedebut" required>
+  </div>
+
+  <!-- End Date Field -->
+  <div class="field">
+    <label for="datefin">End Date:</label>
+    <input type="date" id="datefin" name="datefin" required>
+  </div>
+
+  <!-- Country Selection -->
+  <div class="field">
+    <label for="pays">Country:</label>
+    <select id="pays" name="pays" required>
+      <option value="france">France</option>
+      <option value="usa">USA</option>
+      <option value="canada">Canada</option>
+      <!-- Add more options as needed -->
+    </select>
+  </div>
+
+  <!-- Submit Button -->
+  <div class="field">
+    <button type="submit">Create Competition</button>
+  </div>
+</form>
+
+
