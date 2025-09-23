@@ -93,8 +93,7 @@
       (jdbc/create-table-ddl :album_photo
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
-
-
+         [:activity_id :integer]
          [:title :text]
          [:subtitle :text]]))
     (catch Exception e
@@ -135,6 +134,10 @@
 (defn get-news []
   (jdbc/query db-spec ["select * from news ORDER BY timestamp DESC"]))
 
+(defn get-activity-album-by-id [id]
+  (jdbc/query db-spec ["select * from album_photo where activity_id = ? limit 8" id]))
+(defn get-activity-news-by-id [id]
+  (jdbc/query db-spec ["select * from news where activity_id = ? limit 4" id]))
 (defn get-news-by-id [id]
   (first (jdbc/query db-spec ["select * from news where id = ?" id])))
 
@@ -160,11 +163,11 @@
   (jdbc/insert! db-spec :video params))
 
 (defn get-videos-world-record []
-  (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
+  (jdbc/query db-spec ["select * from video where lower(title) like "%world record%" ORDER BY timestamp DESC"]))
 (defn get-videos-gold-woman []
-  (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
+  (jdbc/query db-spec ["select * from video where lower(title) like "%women%" and lower(title) like "%gold medal%" ORDER BY timestamp DESC"]))
 (defn get-videos-gold-man []
-  (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
+  (jdbc/query db-spec ["select * from where lower(title) like "%men%" and lower(title) like "%gold medal%" video ORDER BY timestamp DESC"]))
 (defn get-videos []
   (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
 

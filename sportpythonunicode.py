@@ -23,5 +23,5 @@ for codepoint in range(start, end + 1):
     if any(keyword in name for keyword in keywords):
         html = f"&#{codepoint};"
         #print(f"{char}     | {codepoint}     | {html} | {name}")
-        print(f"<option name=\"{html}\">{html} {name}</option>")
+        print(f"<option value=\"{html}\">{html} {name}</option>")
 

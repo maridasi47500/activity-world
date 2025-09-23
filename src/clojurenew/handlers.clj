@@ -287,6 +287,12 @@
          (hf/file-upload "photo")    
       ]
     [:div
+  (hf/label "activity_id" "Activity")
+  (hf/select :activity_id
+    (for [{:keys [id name emoji]} (db/get-activities)]
+      [:option {:value id} (str emoji " " name)]))]
+
+    [:div
          (hf/label "content" "content")    
          (hf/text-area "content")    
       ]
@@ -347,6 +353,12 @@
          (hf/label "album[subtitle]" "subtitle")    
          (hf/text-field "album[subtitle]")    
       ]
+  [:div
+  (hf/label "activity_id" "Activity")
+  (hf/select :activity_id
+    (for [{:keys [id name emoji]} (db/get-activities)]
+      [:option {:value id} (str emoji " " name)]))]
+
          (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
                  )
 
@@ -418,6 +430,12 @@
          (hf/label "news[content]" "content")    
          (hf/text-area "news[content]")    
       ]
+[:div
+  (hf/label "news[activity_id]" "Activity")
+  (hf/select "news[activity_id]"
+    (for [{:keys [id name emoji]} (db/get-activities)]
+      [:option {:value id} (str emoji " " name)]))]
+
          (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
                  )
 
@@ -437,6 +455,48 @@
     (render-html (str template) (str debut-mot-string) (str (my-html fin-mot-html))))
 
 
+(defn athletes [_]
+  (let [template (slurp (io/resource "athletes.html"))
+        filled-template (replace-template template
+                         {
+                          "$latest_activities" "hey"})
+        final-page (render-params-html "heyindex.html"
+                      {:title "bienvenue"
+                       :content filled-template
+                        :token (anti-forgery-field)
+                       :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")}
+                       )]
+    (response/content-type
+      (response/response final-page)
+      "text/html")))
+(defn results [_]
+  (let [template (slurp (io/resource "results.html"))
+        filled-template (replace-template template
+                         {
+                          "$latest_activities" "hey"})
+        final-page (render-params-html "heyindex.html"
+                      {:title "bienvenue"
+                       :content filled-template
+                        :token (anti-forgery-field)
+                       :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")}
+                       )]
+    (response/content-type
+      (response/response final-page)
+      "text/html")))
+(defn competitions [_]
+  (let [template (slurp (io/resource "competitions.html"))
+        filled-template (replace-template template
+                         {
+                          "$latest_activities" "hey"})
+        final-page (render-params-html "heyindex.html"
+                      {:title "bienvenue"
+                       :content filled-template
+                        :token (anti-forgery-field)
+                       :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")}
+                       )]
+    (response/content-type
+      (response/response final-page)
+      "text/html")))
 (defn activites [_]
   (let [template (slurp (io/resource "activites.html"))
         latest-activities (str/join ""
@@ -630,6 +690,7 @@
   (let [params (:multipart-params request)
         title (get params "news[title]")
         content (get params "news[content]")
+        activity_id (get params "news[activity_id]")
         photo (get params "news[photo]")
         filename (:filename photo)
         tempfile (:tempfile photo)
@@ -646,6 +707,7 @@
         ;; Enregistre en base
         (println "news to insert" title filename content)
         (db/insert-news! {:title title
+                          :activity_id activity_id
                           :image safe-filename
                           :content content})
         ;; Retourne une réponse JSON
@@ -760,9 +822,113 @@
         "text/html")
       (response/not-found "album not found"))))
 
+(defn voir-activity-competitions-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivitycompetitionsid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
+(defn voir-activity-calendars-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivitycalendarsid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
+(defn voir-activity-results-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivityresultsid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
+(defn voir-activity-athletes-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivityathletesid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
+(defn voir-activity-rankings-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivityrankingid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
+(defn voir-activity-records-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivityrecordsid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
+(defn voir-activity-rules-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivityrulesid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
+(defn voir-activity-points-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voiractivitypointsid.html"))
+news (db/get-activity-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+                 "$activity_id" (str (:id news))
+                 "$emoji" (:emoji news)}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
 (defn voir-activity-id [req]
 (let [id (get-in req [:params :id])
-        hey (slurp (io/resource "voiractivityid.html"))
+        hey (slurp (io/resource "voiractivitycompetitionsid.html"))
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
@@ -772,6 +938,14 @@ news (db/get-activity-by-id id)]
         "Vidéos"
         (db/get-videos-world-record)
         (slurp (io/resource "_voirvideo.html")))
+"$albums" (render-collection-params-album
+        "album"
+        (db/get-activity-album-by-id id)
+        (slurp (io/resource "_voiralbum.html")))
+"$news" (render-collection-params-video
+        "Vidéos"
+        (db/get-activity-news-by-id id)
+        (slurp (io/resource "_voirnews.html")))
 "$goldmedalman" (render-collection-params-video
         "Vidéos"
         (db/get-videos-gold-man)
