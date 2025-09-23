@@ -288,7 +288,7 @@
       ]
     [:div
   (hf/label "activity_id" "Activity")
-  (hf/select :activity_id
+  (hf/select-options :activity_id
     (for [{:keys [id name emoji]} (db/get-activities)]
       [:option {:value id} (str emoji " " name)]))]
 
@@ -355,7 +355,7 @@
       ]
   [:div
   (hf/label "activity_id" "Activity")
-  (hf/select :activity_id
+  (hf/select-options :activity_id
     (for [{:keys [id name emoji]} (db/get-activities)]
       [:option {:value id} (str emoji " " name)]))]
 
@@ -432,7 +432,7 @@
       ]
 [:div
   (hf/label "news[activity_id]" "Activity")
-  (hf/select "news[activity_id]"
+  (hf/select-options "news[activity_id]"
     (for [{:keys [id name emoji]} (db/get-activities)]
       [:option {:value id} (str emoji " " name)]))]
 
@@ -830,6 +830,7 @@ news (db/get-activity-by-id id)]
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+"$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
@@ -843,6 +844,7 @@ news (db/get-activity-by-id id)]
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+"$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
@@ -856,6 +858,7 @@ news (db/get-activity-by-id id)]
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+"$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
@@ -869,6 +872,7 @@ news (db/get-activity-by-id id)]
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+"$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
@@ -882,6 +886,7 @@ news (db/get-activity-by-id id)]
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+"$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
@@ -895,6 +900,7 @@ news (db/get-activity-by-id id)]
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+                 "$id" (str id)
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
@@ -908,6 +914,7 @@ news (db/get-activity-by-id id)]
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+"$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
@@ -921,6 +928,7 @@ news (db/get-activity-by-id id)]
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+                 "$id" (str id)
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
 ) ))
@@ -928,17 +936,18 @@ news (db/get-activity-by-id id)]
       (response/not-found "album not found"))))
 (defn voir-activity-id [req]
 (let [id (get-in req [:params :id])
-        hey (slurp (io/resource "voiractivitycompetitionsid.html"))
+        hey (slurp (io/resource "voiractivityid.html"))
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
+"$id" id
 "$worldrecord" (render-collection-params-video
         "Vidéos"
         (db/get-videos-world-record)
         (slurp (io/resource "_voirvideo.html")))
-"$albums" (render-collection-params-album
+"$albums" (render-collection-params-albums
         "album"
         (db/get-activity-album-by-id id)
         (slurp (io/resource "_voiralbum.html")))

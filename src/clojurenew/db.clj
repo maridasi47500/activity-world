@@ -163,11 +163,11 @@
   (jdbc/insert! db-spec :video params))
 
 (defn get-videos-world-record []
-  (jdbc/query db-spec ["select * from video where lower(title) like "%world record%" ORDER BY timestamp DESC"]))
+  (jdbc/query db-spec ["select * from video where lower(title) like '%world record%' ORDER BY timestamp DESC"]))
 (defn get-videos-gold-woman []
-  (jdbc/query db-spec ["select * from video where lower(title) like "%women%" and lower(title) like "%gold medal%" ORDER BY timestamp DESC"]))
+  (jdbc/query db-spec ["select * from video where lower(title) like '%women%' and lower(title) like '%gold medal%' ORDER BY timestamp DESC"]))
 (defn get-videos-gold-man []
-  (jdbc/query db-spec ["select * from where lower(title) like "%men%" and lower(title) like "%gold medal%" video ORDER BY timestamp DESC"]))
+  (jdbc/query db-spec ["select * from video where lower(title) like '%men%' and lower(title) like '%gold medal%' ORDER BY timestamp DESC"]))
 (defn get-videos []
   (jdbc/query db-spec ["select * from video ORDER BY timestamp DESC"]))
 

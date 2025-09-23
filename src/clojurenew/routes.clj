@@ -81,15 +81,15 @@
   (GET "/activity/:id/calendars" [id :as req] (h/voir-activity-calendars-id (assoc-in req [:params :id] id)))
   (GET "/activity/:id/results" [id :as req] (h/voir-activity-results-id (assoc-in req [:params :id] id)))
   (GET "/activity/:id/athletes" [id :as req] (h/voir-activity-athletes-id (assoc-in req [:params :id] id)))
-  (GET "/activity/:id/rankings" [id :as req] (h/voir-activity-rankings-id (assoc-in req [:params :id] id)))
+  (GET "/activity/:id/ranking" [id :as req] (h/voir-activity-rankings-id (assoc-in req [:params :id] id)))
   (GET "/activity/:id/records" [id :as req] (h/voir-activity-records-id (assoc-in req [:params :id] id)))
   (GET "/activity/:id/rules" [id :as req] (h/voir-activity-rules-id (assoc-in req [:params :id] id)))
   (GET "/activity/:id/points" [id :as req] (h/voir-activity-points-id (assoc-in req [:params :id] id)))
 
   ;; News: routes preserved as in original code
   (GET "/competitions" [] h/competitions)
-  (GET "/results [] h/results)
-  (GET "/athletes [] h/athletes)
+  (GET "/results" [] h/results)
+  (GET "/athletes" [] h/athletes)
 
   (GET "/render_news" req (h/voir-news req))
   (GET "/voir_news/:id" [id :as req] (h/voir-news-id (assoc-in req [:params :id] id)))
