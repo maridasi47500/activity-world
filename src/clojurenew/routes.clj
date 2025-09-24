@@ -89,8 +89,13 @@
   ;; News: routes preserved as in original code
   (GET "/competitions" [] h/competitions)
   (GET "/results" [] h/results)
-  (GET "/athletes" [] h/athletes)
 
+  ;;athletes
+  (GET "/athletes" [] h/athletes)
+  (POST "/create-athlete" req (h/action-create-athlete req))
+
+
+  ;;news
   (GET "/render_news" req (h/voir-news req))
   (GET "/voir_news/:id" [id :as req] (h/voir-news-id (assoc-in req [:params :id] id)))
   (GET "/edit_news/:id" [id :as req] (h/edit-news-id (assoc-in req [:params :id] id)))

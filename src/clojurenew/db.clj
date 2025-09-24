@@ -14,11 +14,22 @@
   (try
     (jdbc/db-do-commands
       db-spec
-      (jdbc/create-table-ddl :athlete
+      (jdbc/create-table-ddl :country
         [[:id "integer primary key autoincrement"]
          [:timestamp :datetime :default :current_timestamp]
          [:name :text]
-         [:country :text]
+        ]))
+    (catch Exception e
+      (println "Athlete table: " (.getMessage e))))
+  (try
+    (jdbc/db-do-commands
+      db-spec
+      (jdbc/create-table-ddl :athlete
+        [[:id "integer primary key autoincrement"]
+         [:timestamp :datetime :default :current_timestamp]
+         [:image :text]
+         [:name :text]
+         [:country_id :integer]
          [:birthdate :date]
         ]))
     (catch Exception e
@@ -33,7 +44,7 @@
        [:date_debut :date]
        [:date_fin :date]
        [:ville :text]
-       [:pays :text]
+       [:country_id :integer]
        [:title :text]
        ]))
   (catch Exception e
@@ -261,3 +272,16 @@
 (defn delete-athlete! [id]
   (jdbc/delete! db-spec :athlete ["id=?" id]))
 
+(defn insert-country! [params]
+  (jdbc/insert! db-spec :country params))
+
+(defn get-countries []
+  (jdbc/query db-spec ["select * from country ORDER BY name asc"]))
+
+(defn get-country-by-id [id]
+  (first (jdbc/query db-spec ["select * from country where id = ?" id])))
+
+(defn delete-country! [id]
+  (jdbc/delete! db-spec :country ["id=?" id]))
+(defn country-exists? [name]
+  (not (empty? (jdbc/query db-spec ["SELECT 1 FROM country WHERE name = ?" name]))))

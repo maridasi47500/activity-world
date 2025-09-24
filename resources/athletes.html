@@ -1,19 +1,21 @@
 <h1>athletes</h1>
-<form action="/create-athlete" method="post">
+<form action="/create-athlete" id="form-create-athlete" method="post">
   <!-- Field for athlete's name -->
   <div class="field">
     <label for="name">Name:</label>
     <input name="name" type="text" id="name" required>
   </div>
+  <div class="field">
+    <label for="photo">Photo:</label>
+    <input name="athlete[photo]" type="file" id="photo" required>
+  </div>
 
   <!-- Field for selecting country -->
   <div class="field">
     <label for="country">Country:</label>
-    <select name="country" id="country" required>
+    <select name="athlete[country_id]" id="country" required>
       <option value="" disabled selected>Select a country</option>
-      <option value="USA">USA</option>
-      <option value="France">France</option>
-      <option value="Brazil">Brazil</option>
+$allcountries
       <!-- Add more countries as needed -->
     </select>
   </div>
@@ -21,7 +23,7 @@
   <!-- Field for birthdate -->
   <div class="field">
     <label for="birthdate">Birthdate:</label>
-    <input name="birthdate" type="date" id="birthdate" required>
+    <input name="athlete[birthdate]" type="date" id="birthdate" required>
   </div>
 
   <!-- Submit button -->

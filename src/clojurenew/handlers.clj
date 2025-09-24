@@ -155,6 +155,36 @@
               s)) ; skip if either is nil
           s replacements))
 
+(defn render-collection-params-countries
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several (slurp (io/resource template))
+                 "$name" (str (:name %))
+                 "$id" (str (:id %))
+) coll))
+               "<p>Il n'y a rien à afficher. </p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    body))
+(defn render-collection-params-athletes
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several (slurp (io/resource template))
+                 "$name" (str (:name %))
+                 "$id" (str (:id %))
+) coll))
+               "<p>Il n'y a rien à afficher. </p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    body))
 (defn render-collection-params-activities
   "Render a collection of news into a template with name of params in view."
   [title coll template]
@@ -459,7 +489,7 @@
   (let [template (slurp (io/resource "athletes.html"))
         filled-template (replace-template template
                          {
-                          "$latest_activities" "hey"})
+                          "$allcountries" (render-collection-params-countries "activities" (db/get-countries) "_optioncountry.html")})
         final-page (render-params-html "heyindex.html"
                       {:title "bienvenue"
                        :content filled-template
@@ -473,7 +503,8 @@
   (let [template (slurp (io/resource "results.html"))
         filled-template (replace-template template
                          {
-                          "$latest_activities" "hey"})
+                          "$allathletes" (render-collection-params-athletes "activities" (db/get-athletes) "_optionathlete.html")
+                          "$allactivities" (render-collection-params-activities "activities" (db/get-activities) "_optionactivity.html")})
         final-page (render-params-html "heyindex.html"
                       {:title "bienvenue"
                        :content filled-template
@@ -487,7 +518,7 @@
   (let [template (slurp (io/resource "competitions.html"))
         filled-template (replace-template template
                          {
-                          "$latest_activities" "hey"})
+                          "$allcountries" (render-collection-params-countries "activities" (db/get-countries) "_optioncountry.html")})
         final-page (render-params-html "heyindex.html"
                       {:title "bienvenue"
                        :content filled-template
@@ -680,6 +711,44 @@
          "application/json")))))
 
 
+(defn action-create-athlete [request]
+  (println "request" (str request))
+  (println "Headers:" (:headers request))
+  (println "Multipart params:" (:multipart-params request))
+  (println "Form params:" (:form-params request))
+  (println "Params:" (:params request))
+  (println "yeah")
+  (let [params (:multipart-params request)
+        name (get params "athlete[name]")
+        birthdate (get params "athlete[birthdate]")
+        country_id (get params "athlete[country_id]")
+        photo (get params "athlete[photo]")
+        filename (:filename photo)
+        tempfile (:tempfile photo)
+        safe-filename (sanitize-filename filename)
+        target-path (str "resources/public/uploads/" safe-filename)]
+
+    (if (and title content photo tempfile filename)
+      (do
+        (println "yeeeeeeees wow")
+        ;; Crée les dossiers si besoin
+        (clojure.java.io/make-parents target-path)
+        ;; Copie le fichier
+        (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
+        ;; Enregistre en base
+        (println "news to insert" title filename content)
+        (db/insert-athlete! {:name name
+                          :country_id country_id
+                          :image safe-filename
+                          :birthdate birthdate})
+        ;; Retourne une réponse JSON
+        (response/content-type
+         (response/response (render-json "athlete.json"))
+         "application/json"))
+      ;; Champs manquants
+      (response/content-type
+       (response/response (render-json "athlete.json"))
+       "application/json"))))
 (defn action-create-news [request]
   (println "request" (str request))
   (println "Headers:" (:headers request))
