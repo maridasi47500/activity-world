@@ -87,8 +87,12 @@
   (GET "/activity/:id/points" [id :as req] (h/voir-activity-points-id (assoc-in req [:params :id] id)))
 
   ;; News: routes preserved as in original code
-  (GET "/competitions" [] h/competitions)
+
   (GET "/results" [] h/results)
+
+  ;;competitions
+  (GET "/competitions" [] h/competitions)
+  (POST "/createcompetitions" req (h/action-create-competition req))
 
   ;;athletes
   (GET "/athletes" [] h/athletes)

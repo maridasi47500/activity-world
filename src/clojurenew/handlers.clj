@@ -54,10 +54,35 @@
 
 
 (defn replace-template [template replacements]
+  (println template)
+  (println replacements)
   (reduce (fn [acc [k v]]
             (clojure.string/replace acc k v))
           template
           replacements))
+;(defn replace-template [template replacements]
+;  (reduce (fn [acc [k v]]
+;            (-> acc
+;                (clojure.string/replace (re-pattern (str "\\$" (java.util.regex.Pattern/quote k))) 
+;                                        (java.util.regex.Matcher/quoteReplacement v))
+;                (clojure.string/replace (re-pattern (str "\\{\\{" (java.util.regex.Pattern/quote k) "\\}\\}")) 
+;                                        (java.util.regex.Matcher/quoteReplacement v))))
+;          template 
+;          replacements))
+
+;(defn replace-template [template replacements]
+;  (reduce (fn [acc [k v]]
+;            (clojure.string/replace acc k (java.util.regex.Matcher/quoteReplacement v)))
+;          template
+;          replacements))
+;(defn replace-template [template replacements]
+;  (reduce (fn [acc [k v]]
+;            (clojure.string/replace acc (re-pattern (str "\\{\\{" (java.util.regex.Pattern/quote k) "\\}\\}")) 
+;                                    (java.util.regex.Matcher/quoteReplacement v)))
+;          template 
+;          replacements))
+
+
 (defn handle-news [request]
   (let [params (:multipart-params request)
         title (get params "news[title]")
@@ -155,6 +180,22 @@
               s)) ; skip if either is nil
           s replacements))
 
+(defn render-collection-params-events
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several (slurp (io/resource template))
+                 "$title" (str (:title %))
+                 "$datedebut" (str (:date_debut %))
+                 "$datefin" (str (:date_fin %))
+                 "$ville" (str (:ville %))
+                 "$country_id" (str (:country_id %))
+                 "$id" (str (:id %))
+) coll))
+               "<p>Il n'y a rien à afficher. </p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    body))
 (defn render-collection-params-countries
   "Render a collection of news into a template with name of params in view."
   [title coll template]
@@ -178,6 +219,9 @@
   (println "template:" template)
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several (slurp (io/resource template))
+                 "$image" (str (:image %))
+                 "$country_id" (str (:country_id %))
+                 "$birthdate" (str (:birthdate %))
                  "$name" (str (:name %))
                  "$id" (str (:id %))
 ) coll))
@@ -489,6 +533,7 @@
   (let [template (slurp (io/resource "athletes.html"))
         filled-template (replace-template template
                          {
+                          "$allathletes" (render-collection-params-athletes "activities" (db/get-athletes) "_listathlete.html")
                           "$allcountries" (render-collection-params-countries "activities" (db/get-countries) "_optioncountry.html")})
         final-page (render-params-html "heyindex.html"
                       {:title "bienvenue"
@@ -516,14 +561,17 @@
       "text/html")))
 (defn competitions [_]
   (let [template (slurp (io/resource "competitions.html"))
+        activities (db/get-activities)
         filled-template (replace-template template
                          {
-                          "$allcountries" (render-collection-params-countries "activities" (db/get-countries) "_optioncountry.html")})
+                          "{{allevents}}" (render-collection-params-events "activities" (db/get-events) "_listevent.html")
+                          "{{allactivities}}" (render-collection-params-activities "activities" activities "_optionactivity.html")
+                          "{{allcountries}}" (render-collection-params-countries "country" (db/get-countries) "_optioncountry.html")})
         final-page (render-params-html "heyindex.html"
                       {:title "bienvenue"
                        :content filled-template
-                        :token (anti-forgery-field)
-                       :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")}
+                        ;:token (anti-forgery-field)
+                       :activities (render-collection-params-activities "activities" activities "_activitymenu.html")}
                        )]
     (response/content-type
       (response/response final-page)
@@ -711,6 +759,37 @@
          "application/json")))))
 
 
+(defn action-create-competition [request]
+  (println "request" (str request))
+  (println "Headers:" (:headers request))
+  (println "Multipart params:" (:multipart-params request))
+  (println "Form params:" (:form-params request))
+  (println "Params:" (:params request))
+  (println "yeah")
+  (let [params (:multipart-params request)
+        title (get params "event[title]")
+        datedebut (get params "event[datedebut]")
+        datefin (get params "event[datefin]")
+        ville (get params "event[ville]")
+        country_id (get params "event[country_id]")]
+
+    (if (and title datedebut datefin ville country_id)
+      (do
+        (println "yeeeeeeees wow")
+        ;; Enregistre en base
+        (db/insert-event! {:title title
+                          :country_id country_id
+                          :date_debut datedebut
+                          :date_fin datefin
+                          :ville ville})
+        ;; Retourne une réponse JSON
+        (response/content-type
+         (response/response (render-json "competition.json"))
+         "application/json"))
+      ;; Champs manquants
+      (response/content-type
+       (response/response (render-json "competition.json"))
+       "application/json"))))
 (defn action-create-athlete [request]
   (println "request" (str request))
   (println "Headers:" (:headers request))
@@ -728,7 +807,7 @@
         safe-filename (sanitize-filename filename)
         target-path (str "resources/public/uploads/" safe-filename)]
 
-    (if (and title content photo tempfile filename)
+    (if (and name birthdate country_id photo tempfile filename)
       (do
         (println "yeeeeeeees wow")
         ;; Crée les dossiers si besoin
@@ -736,7 +815,6 @@
         ;; Copie le fichier
         (clojure.java.io/copy tempfile (clojure.java.io/file target-path))
         ;; Enregistre en base
-        (println "news to insert" title filename content)
         (db/insert-athlete! {:name name
                           :country_id country_id
                           :image safe-filename

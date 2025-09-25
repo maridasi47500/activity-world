@@ -1,3 +1,15 @@
+const myModal = new bootstrap.Modal('#myModal', {
+  keyboard: false
+});
+function handleEventClick(id, title, mindate, maxdate) {
+  $("#event-name").html(title);
+  $("#myeventid").val(id);
+  $("#button1").click();
+  mydate.min = new Date(mindate);
+  mydate.max = new Date(maxdate);
+}
+
+
 var now = new Date(),
     // minimum date the user can choose, in this case now and in the future
     minDate = now.toISOString().substring(0,10);
@@ -6,7 +18,7 @@ var now = new Date(),
 $(function(){
 //$('.carousel').carousel();
 
-$('#form-create-athlete,#form-add-activity,#form-delete-news, #form-delete-video, #form-delete-photo, #form-delete-album,#form-edit-news, #form-edit-video, #form-edit-photo, #form-edit-album, #form-create-news, #form-create-video, #form-create-photo, #form-create-album').on('submit', function () {
+$('#form-create-live-schedule, #form-create-competition, #form-create-athlete,#form-add-activity,#form-delete-news, #form-delete-video, #form-delete-photo, #form-delete-album,#form-edit-news, #form-edit-video, #form-edit-photo, #form-edit-album, #form-create-news, #form-create-video, #form-create-photo, #form-create-album').on('submit', function () {
   var fd = new FormData($(this)[0]);    
 
   if (window.filesize > 1024*1024*10) {
@@ -110,6 +122,7 @@ $('#photo').on('change', function() { window.filesize = this.files[0].size; });
     }
   });
 });*/
+
 
 
   

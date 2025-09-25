@@ -1,5 +1,4 @@
 <h1>competitions</h1>
-{{allevents}}
 <form id="form-create-competition" action="/createcompetitions" method="post">
   <!-- Title Field -->
   <div class="field">
@@ -28,67 +27,65 @@
   <div class="field">
     <label for="country_id">Country:</label>
     <select id="country_id" name="event[country_id]" required>
-{{allcountries}}
+$allcountries
       <!-- Add more options as needed -->
     </select>
   </div>
 
   <!-- Submit Button -->
   <div class="field">
-    <input type="submit" name="submit" value="Create Competition" />
+    <button type="submit">Create Competition</button>
   </div>
 </form>
 
 
-
-
+$allevents
 <!-- Button trigger modal -->
-<button type="button" hidden id="button1" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
   Launch demo modal
 </button>
 
 <!-- Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Programmer une activité en direct pour l'événement</h1>
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+        ...
 
-
-<form id="form-create-live-schedule" action="/create_live_schedule" method="post">
+<form action="create_live_schedule" method="post">
   <!-- Hidden Field -->
-  <p id="event-name"></p>
   <div class="field">
-    <input id="myeventid" type="hidden" name="live_schedule[event_id]" value="12345">
+    <input type="hidden" name="event_id" value="12345">
   </div>
 
   <!-- Dropdown for Activity Selection -->
   <div class="field">
     <label for="activity_id">Select Activity:</label>
-    <select name="live_schedule[activity_id]" id="activity_id">
-{{allactivities}}
+    <select name="activity_id" id="activity_id">
+$allactivities
     </select>
   </div>
 
   <!-- Title Input -->
   <div class="field">
     <label for="title">Title:</label>
-    <input type="text" name="live_schedule[title]" id="title" placeholder="Enter title">
+    <input type="text" name="title" id="title" placeholder="Enter title">
   </div>
 
   <!-- Date Input -->
   <div class="field">
     <label for="mydate">Date:</label>
-    <input type="date" name="live_schedule[mydate]" id="mydate">
+    <input type="date" name="mydate" id="mydate">
   </div>
 
   <!-- Time Input -->
   <div class="field">
     <label for="mytime">Time:</label>
-    <input type="time" name="live_schedule[mytime]" id="mytime">
+    <input type="time" name="mytime" id="mytime">
   </div>
 
   <!-- Submit Button -->
@@ -96,6 +93,7 @@
     <button type="submit">Create Schedule</button>
   </div>
 </form>
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -104,4 +102,3 @@
     </div>
   </div>
 </div>
-
