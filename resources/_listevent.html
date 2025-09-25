@@ -1,7 +1,8 @@
-<div class="event-item" id="event$id" data-countryid="$country_id" onclick="handleEventClick('$id', this.innerText, '$datedebut', '$datefin')"> <p>
+<div class="event-item" id="event$id"> <p id="event$idname">
 du $datedebut au $datefin : <b >$title</b>
 </p>
-<p>
+<p id="event$idcity">
 $ville
 </p>
+<span class="program-live-schedule" onclick="handleEventClick('$id', event$idname.innerText+' ' + event$idcity.innerText, '$datedebut', '$datefin')">programme une activité en direct pour l'évenement </span>
 </div>

@@ -32,3 +32,20 @@ p.location{
 font-size:30px;
 color:green;
 }
+.program-live-schedule {
+  display: inline-block;
+  background-color: #007BFF; /* bleu vif */
+  color: #fff;               /* texte blanc */
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.program-live-schedule:hover {
+  background-color: #0056b3; /* bleu foncé au survol */
+}
+
