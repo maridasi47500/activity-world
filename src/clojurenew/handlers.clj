@@ -1120,6 +1120,22 @@ news (db/get-activity-by-id id)]
 ) ))
         "text/html")
       (response/not-found "album not found"))))
+
+(defn voir-event-id [req]
+(let [id (get-in req [:params :id])
+        hey (slurp (io/resource "voireventid.html"))
+news (db/get-event-by-id id)]
+(if news
+(response/content-type
+(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+                 {
+"$id" id
+"$title" (str (:title news))
+                 "$event_id" (str (:id news))}
+) ))
+        "text/html")
+      (response/not-found "album not found"))))
+
 (defn voir-activity-id [req]
 (let [id (get-in req [:params :id])
         hey (slurp (io/resource "voiractivityid.html"))

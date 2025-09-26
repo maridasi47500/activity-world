@@ -92,6 +92,7 @@
 
   ;;competitions
   (GET "/competitions" [] h/competitions)
+  (GET "/competitions/:id" [id :as req] (h/voir-event-id (assoc-in req [:params :id] id)))
   (POST "/createcompetitions" req (h/action-create-competition req))
 
   ;;live schedule
