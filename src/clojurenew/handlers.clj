@@ -782,7 +782,7 @@
                           :mytime mytime
                           :mydate mydate
                           :activity_id activity_id})
-            liveschedule_id (:id liveschedule)]
+            livescheduleevent_id (:event_id liveschedule)]
         (println "to insert album id" title subtitle album_id)
         ;; Retourne une réponse JSON
          
@@ -790,11 +790,13 @@
         ;; Retourne une réponse JSON
         (response/content-type
          (response/response (render-json "liveschedule.json" 
-"{{id}}" liveschedule_id ))
+"{{id}}" livescheduleevent_id ))
          "application/json"))
       ;; Champs manquants
       (response/content-type
-       (response/response (render-json "competition.json"))
+       (response/response (render-json "competition.json"
+"{{id}}" livescheduleevent_id ))
+
        "application/json"))))
 (defn action-create-competition [request]
   (println "request" (str request))

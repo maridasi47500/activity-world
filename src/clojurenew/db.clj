@@ -206,7 +206,7 @@
     (println "Raw insert result:" album)
     (println "Extracted album ID:" album-id)
     (println "live shcuedle  keys:" (keys album))
-    {:id album-id :title (:title params) :mytime (:mytime params) :mydate (:mydate params)}))
+    {:id album-id :event_id (:event_id params) :title (:title params) :mytime (:mytime params) :mydate (:mydate params)}))
 
 (defn get-albums []
   (jdbc/query db-spec ["select * from album_photo ORDER BY timestamp DESC"]))
