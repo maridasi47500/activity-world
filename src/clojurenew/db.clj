@@ -199,6 +199,14 @@
     (println "Album keys:" (keys album))
     {:id album-id :title (:title params) :subtitle (:subtitle params)}))
 
+(defn insert-live-schedule! [params]
+  (let [result (jdbc/insert! db-spec :live_schedule params)
+        album (first result)
+        album-id (get album (keyword "last_insert_rowid()"))]
+    (println "Raw insert result:" album)
+    (println "Extracted album ID:" album-id)
+    (println "live shcuedle  keys:" (keys album))
+    {:id album-id :title (:title params) :mytime (:mytime params) :mydate (:mydate params)}))
 
 (defn get-albums []
   (jdbc/query db-spec ["select * from album_photo ORDER BY timestamp DESC"]))

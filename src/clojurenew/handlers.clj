@@ -759,6 +759,43 @@
          "application/json")))))
 
 
+(defn action-create-live-schedule [request]
+  (println "request" (str request))
+  (println "Headers:" (:headers request))
+  (println "Multipart params:" (:multipart-params request))
+  (println "Form params:" (:form-params request))
+  (println "Params:" (:params request))
+  (println "yeah")
+  (let [params (:multipart-params request)
+        event_id (get params "live_schedule[event_id]")
+        activity_id (get params "live_schedule[activity_id]")
+        title (get params "live_schedule[title]")
+        mydate (get params "live_schedule[mydate]")
+        mytime (get params "live_schedule[mytime]")]
+
+    (if (and event_id activity_id title mydate mytime)
+      (do
+        (println "yeeeeeeees wow")
+        ;; Enregistre en base
+         (let [liveschedule (db/insert-live-schedule! {:title title
+                          :event_id event_id
+                          :mytime mytime
+                          :mydate mydate
+                          :activity_id activity_id})
+            liveschedule_id (:id liveschedule)]
+        (println "to insert album id" title subtitle album_id)
+        ;; Retourne une réponse JSON
+         
+
+        ;; Retourne une réponse JSON
+        (response/content-type
+         (response/response (render-json "liveschedule.json" 
+"{{id}}" liveschedule_id ))
+         "application/json"))
+      ;; Champs manquants
+      (response/content-type
+       (response/response (render-json "competition.json"))
+       "application/json"))))
 (defn action-create-competition [request]
   (println "request" (str request))
   (println "Headers:" (:headers request))
