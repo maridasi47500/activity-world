@@ -1,3 +1,4 @@
+if (document.getElementById("myModal")) {
 const myModal = new bootstrap.Modal('#myModal', {
   keyboard: false
 });
@@ -5,8 +6,12 @@ function handleEventClick(id, title, mindate, maxdate) {
   $("#event-name").html(title);
   $("#myeventid").val(id);
   $("#button1").click();
-  mydate.min = new Date(mindate);
-  mydate.max = new Date(maxdate);
+  var min = new Date(mindate);
+  mydate.min =`${min.getFullYear()}-${String(min.getMonth() + 1).padStart(2, '0')}-${String(min.getDate() + 1).padStart(2, '0')}`;
+
+  var max = new Date(maxdate);
+  mydate.max =`${max.getFullYear()}-${String(max.getMonth() + 1).padStart(2, '0')}-${String(max.getDate() + 1).padStart(2, '0')}`;
+}
 }
 
 

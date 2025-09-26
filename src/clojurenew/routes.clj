@@ -94,6 +94,8 @@
   (GET "/competitions" [] h/competitions)
   (POST "/createcompetitions" req (h/action-create-competition req))
 
+  ;;live schedule
+  (POST "/create_live_schedule" req (h/action-create-live-schedule req))
   ;;athletes
   (GET "/athletes" [] h/athletes)
   (POST "/create-athlete" req (h/action-create-athlete req))
