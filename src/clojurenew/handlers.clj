@@ -186,6 +186,8 @@
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several (slurp (io/resource template))
                  "$activity_id" (str (:activity_id %))
+                 "$activityname" (str (:activityname %))
+                 "$eventtitle" (str (:eventtitle %))
                  "$title" (str (:title %))
                  "$mytime" (str (:mytime %))
                  "$mydate" (str (:mydate %))
@@ -787,15 +789,15 @@
   (some-> (db/get-live-schedule-by-id live-schedule-id)
           :result_id))
 
-(defn create-result-response [result-id live-schedule-id]
-  (-> (render-json "result.json"
-                   "{{id}}" result-id
+(defn create-result-response [resultid live-schedule-id]
+  (-> (replace-several (render-json "result.json")
+                   "{{myid}}" (str resultid)
                    "{{live_schedule_id}}" live-schedule-id)
       response/response
       (response/content-type "application/json")))
 
 (defn fallback-response [event-id]
-  (-> (render-json "liveschedule.json"
+  (-> (replace-several (render-json "liveschedule.json")
                    "{{id}}" event-id)
       response/response
       (response/content-type "application/json")))
@@ -812,54 +814,61 @@
         event-id (fetch-event-id live_schedule_id)]
 
     (if (and live_schedule_id athlete_id mytime)
-      (let [{:keys [id]} (db/insert-result! {:live_schedule_id live_schedule_id
+      (let [result (db/insert-result! {:live_schedule_id live_schedule_id
                                              :athlete_id athlete_id
-                                             :mytime mytime})]
+                                             :mytime mytime})
+           resultid (:id result)]
         (println "Inserted result for athlete ID:" athlete_id)
-        (create-result-response id live_schedule_id))
+        (create-result-response resultid live_schedule_id))
       (do
         (println "Missing required fields, returning fallback.")
         (fallback-response event-id)))))
 
+(defn extract-live-schedule-params [request]
+  (let [{event-id "live_schedule[event_id]"
+         activity-id "live_schedule[activity_id]"
+         title "live_schedule[title]"
+         mydate "live_schedule[mydate]"
+         mytime "live_schedule[mytime]"} (:multipart-params request)]
+    {:event_id event-id
+     :activity_id activity-id
+     :title title
+     :mydate mydate
+     :mytime mytime}))
+
+(defn create-live-schedule-response [event-id]
+  (-> (replace-several (render-json "liveschedule.json") "{{id}}" event-id)
+      response/response
+      (response/content-type "application/json")))
+
+(defn fallback-live-schedule-response [event-id]
+  (-> (render-json "competition.json" "{{id}}" event-id)
+      response/response
+      (response/content-type "application/json")))
+
 (defn action-create-live-schedule [request]
-  (println "request" (str request))
-  (println "Headers:" (:headers request))
-  (println "Multipart params:" (:multipart-params request))
-  (println "Form params:" (:form-params request))
-  (println "Params:" (:params request))
-  (println "yeah")
-  (let [params (:multipart-params request)
-        event_id (get params "live_schedule[event_id]")
-        activity_id (get params "live_schedule[activity_id]")
-        title (get params "live_schedule[title]")
-        mydate (get params "live_schedule[mydate]")
-        mytime (get params "live_schedule[mytime]")]
+  (println "Incoming request:" (str request))
+  (doseq [[label data] {"Headers" (:headers request)
+                        "Multipart params" (:multipart-params request)
+                        "Form params" (:form-params request)
+                        "Params" (:params request)}]
+    (println label ":" data))
+
+  (let [{:keys [event_id activity_id title mydate mytime]} (extract-live-schedule-params request)]
 
     (if (and event_id activity_id title mydate mytime)
+      (let [{:keys [event_id] :as liveschedule}
+            (db/insert-live-schedule! {:title title
+                                       :event_id event_id
+                                       :mytime mytime
+                                       :mydate mydate
+                                       :activity_id activity_id})]
+        (println "Live schedule created for event:" event_id)
+        (create-live-schedule-response event_id))
       (do
-        (println "yeeeeeeees wow")
-        ;; Enregistre en base
-         (let [liveschedule (db/insert-live-schedule! {:title title
-                          :event_id event_id
-                          :mytime mytime
-                          :mydate mydate
-                          :activity_id activity_id})
-            livescheduleevent_id (:event_id liveschedule)]
-        (println "to insert album id" title subtitle album_id)
-        ;; Retourne une réponse JSON
-         
+        (println "Missing required fields — cannot create live schedule.")
+        (fallback-live-schedule-response event_id)))))
 
-        ;; Retourne une réponse JSON
-        (response/content-type
-         (response/response (render-json "liveschedule.json" 
-"{{id}}" livescheduleevent_id ))
-         "application/json"))
-      ;; Champs manquants
-      (response/content-type
-       (response/response (render-json "competition.json"
-"{{id}}" livescheduleevent_id ))
-
-       "application/json"))))
 (defn action-create-competition [request]
   (println "request" (str request))
   (println "Headers:" (:headers request))
@@ -1192,11 +1201,13 @@ news (db/get-event-by-id id)]
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
 "$id" id
- "$allathletes" (render-collection-params-athletes "activities" (db/get-athletes) "_listathlete.html")
+                 "$datedebut" (str (:date_debut news))
+                 "$datefin" (str (:date_fin news))
+ "$allathletes" (render-collection-params-athletes "activities" (db/get-athletes) "_optionathlete.html")
 "$tousleshoraires" (render-collection-params-live-schedule
         "Vidéos"
         (db/get-live-schedule-by-event-id id)
-        (slurp (io/resource "_voirschedule.html")))
+        "_voirschedule.html")
 "$title" (str (:title news))
                  "$event_id" (str (:id news))}
 ) ))

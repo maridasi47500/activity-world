@@ -1,1 +1,1 @@
-{"reidrect":"/results?live_schedule_id={{live_schedule_id}}&result_id={{id}}"}
+{"redirect":"/results?live_schedule_id={{live_schedule_id}}&result_id={{myid}}"}

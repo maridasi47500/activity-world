@@ -146,7 +146,7 @@
   (jdbc/query db-spec ["select * from news ORDER BY timestamp DESC"]))
 
 (defn get-live-schedule-by-event-id [id]
-  (jdbc/query db-spec ["select *, event.title as eventtitle, activity.name as activityname from live_schedule left join event e on e.id = live_schedule.event_id left join activity a on a.id = live_schedule.activity_id where event_id = ?  order by timestamp DESC limit 10" id]))
+  (jdbc/query db-spec ["select *, e.title as eventtitle, a.name as activityname from live_schedule left join event e on e.id = live_schedule.event_id left join activity a on a.id = live_schedule.activity_id where live_schedule.event_id = ?  order by live_schedule.timestamp DESC limit 10" id]))
 (defn get-activity-album-by-id [id]
   (jdbc/query db-spec ["select * from album_photo where activity_id = ? limit 8" id]))
 (defn get-activity-news-by-id [id]
@@ -202,6 +202,14 @@
     (println "Extracted album ID:" album-id)
     (println "Album keys:" (keys album))
     {:id album-id :title (:title params) :subtitle (:subtitle params)}))
+(defn insert-result! [params]
+  (let [result (jdbc/insert! db-spec :result params)
+        album (first result)
+        album-id (get album (keyword "last_insert_rowid()"))]
+    (println "Raw insert result:" album)
+    (println "Extracted album ID:" album-id)
+    (println "Album keys:" (keys album))
+    {:id album-id }))
 
 (defn insert-live-schedule! [params]
   (let [result (jdbc/insert! db-spec :live_schedule params)
@@ -260,8 +268,6 @@
 (defn delete-event! [id]
   (jdbc/delete! db-spec :event ["id=?" id]))
 
-(defn insert-result! [params]
-  (jdbc/insert! db-spec :result params))
 
 (defn get-results []
   (jdbc/query db-spec ["select * from result ORDER BY timestamp DESC"]))
