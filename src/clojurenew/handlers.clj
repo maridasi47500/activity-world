@@ -180,6 +180,22 @@
               s)) ; skip if either is nil
           s replacements))
 
+(defn render-collection-params-live-schedule
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several (slurp (io/resource template))
+                 "$activity_id" (str (:activity_id %))
+                 "$title" (str (:title %))
+                 "$mytime" (str (:mytime %))
+                 "$mydate" (str (:mydate %))
+                 "$event_id" (str (:event_id %))
+                 "$id" (str (:id %))
+) coll))
+               "<p>Il n'y a rien à afficher. </p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    body))
 (defn render-collection-params-events
   "Render a collection of news into a template with name of params in view."
   [title coll template]
@@ -759,6 +775,52 @@
          "application/json")))))
 
 
+(defn extract-result-params [request]
+  (let [{live-id "result[live_schedule_id]"
+         athlete-id "result[athlete_id]"
+         mytime "result[mytime]"} (:multipart-params request)]
+    {:live_schedule_id live-id
+     :athlete_id athlete-id
+     :mytime mytime}))
+
+(defn fetch-event-id [live-schedule-id]
+  (some-> (db/get-live-schedule-by-id live-schedule-id)
+          :result_id))
+
+(defn create-result-response [result-id live-schedule-id]
+  (-> (render-json "result.json"
+                   "{{id}}" result-id
+                   "{{live_schedule_id}}" live-schedule-id)
+      response/response
+      (response/content-type "application/json")))
+
+(defn fallback-response [event-id]
+  (-> (render-json "liveschedule.json"
+                   "{{id}}" event-id)
+      response/response
+      (response/content-type "application/json")))
+
+(defn action-create-result [request]
+  (println "Incoming request:" (str request))
+  (doseq [[label data] {"Headers" (:headers request)
+                        "Multipart params" (:multipart-params request)
+                        "Form params" (:form-params request)
+                        "Params" (:params request)}]
+    (println label ":" data))
+
+  (let [{:keys [live_schedule_id athlete_id mytime]} (extract-result-params request)
+        event-id (fetch-event-id live_schedule_id)]
+
+    (if (and live_schedule_id athlete_id mytime)
+      (let [{:keys [id]} (db/insert-result! {:live_schedule_id live_schedule_id
+                                             :athlete_id athlete_id
+                                             :mytime mytime})]
+        (println "Inserted result for athlete ID:" athlete_id)
+        (create-result-response id live_schedule_id))
+      (do
+        (println "Missing required fields, returning fallback.")
+        (fallback-response event-id)))))
+
 (defn action-create-live-schedule [request]
   (println "request" (str request))
   (println "Headers:" (:headers request))
@@ -1130,6 +1192,11 @@ news (db/get-event-by-id id)]
 (response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
                  {
 "$id" id
+ "$allathletes" (render-collection-params-athletes "activities" (db/get-athletes) "_listathlete.html")
+"$tousleshoraires" (render-collection-params-live-schedule
+        "Vidéos"
+        (db/get-live-schedule-by-event-id id)
+        (slurp (io/resource "_voirschedule.html")))
 "$title" (str (:title news))
                  "$event_id" (str (:id news))}
 ) ))

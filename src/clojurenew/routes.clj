@@ -97,6 +97,8 @@
 
   ;;live schedule
   (POST "/create_live_schedule" req (h/action-create-live-schedule req))
+  ;;results
+  (POST "/create_result" req (h/action-create-result req))
   ;;athletes
   (GET "/athletes" [] h/athletes)
   (POST "/create-athlete" req (h/action-create-athlete req))

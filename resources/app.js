@@ -13,6 +13,16 @@ function handleEventClick(id, title, mindate, maxdate) {
   mydate.max =`${max.getFullYear()}-${String(max.getMonth() + 1).padStart(2, '0')}-${String(max.getDate() + 1).padStart(2, '0')}`;
 }
 }
+if (document.getElementById("myModalSchedule")) {
+const myModal = new bootstrap.Modal('#myModalSchedule', {
+  keyboard: false
+});
+function handleEventClickSchedule(id, title) {
+  $("#schedule-name").html(title);
+  $("#myscheduleid").val(id);
+  $("#button1").click();
+}
+}
 
 
 var now = new Date(),
@@ -23,7 +33,7 @@ var now = new Date(),
 $(function(){
 //$('.carousel').carousel();
 
-$('#form-create-live-schedule, #form-create-competition, #form-create-athlete,#form-add-activity,#form-delete-news, #form-delete-video, #form-delete-photo, #form-delete-album,#form-edit-news, #form-edit-video, #form-edit-photo, #form-edit-album, #form-create-news, #form-create-video, #form-create-photo, #form-create-album').on('submit', function () {
+$('#form-create-result,#form-create-live-schedule, #form-create-competition, #form-create-athlete,#form-add-activity,#form-delete-news, #form-delete-video, #form-delete-photo, #form-delete-album,#form-edit-news, #form-edit-video, #form-edit-photo, #form-edit-album, #form-create-news, #form-create-video, #form-create-photo, #form-create-album').on('submit', function () {
   var fd = new FormData($(this)[0]);    
 
   if (window.filesize > 1024*1024*10) {

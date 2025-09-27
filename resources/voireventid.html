@@ -1,8 +1,62 @@
 <h1>
-voir un evenement 
+voir l'évènement $title
 du $datedebut
 a $datefin
 
 
 </h1>
 $tousleshoraires 
+
+
+<!-- Button trigger modal -->
+<button type="button" hidden id="button1" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModalSchedule">
+  Launch demo modal
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="myModalSchedule" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Ajouter un résultat en direct pour l'activité programmée</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+
+<form id="form-create-result" action="/create_result" method="post">
+  <!-- Hidden Field -->
+  <p id="schedule-name"></p>
+  <div class="field">
+    <input id="myscheduleid" type="hidden" name="result[live_schedule_id]" value="12345">
+  </div>
+
+  <!-- Dropdown for Activity Selection -->
+  <div class="field">
+    <label for="athlete_id">Select athelete:</label>
+    <select name="result[athlete_id]" id="athlete_id">
+{{allathletes}}
+    </select>
+  </div>
+
+  <!-- Title Input -->
+  <div class="field">
+    <label for="mytime">time of the athlete (in milliseconds):</label>
+    <input type="time" step="0.001" name="result[mytime]" id="mytime" />
+  </div>
+
+
+  <!-- Submit Button -->
+  <div class="field">
+    <button type="submit">Add result</button>
+  </div>
+</form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+

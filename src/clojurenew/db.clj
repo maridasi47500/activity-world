@@ -145,10 +145,14 @@
 (defn get-news []
   (jdbc/query db-spec ["select * from news ORDER BY timestamp DESC"]))
 
+(defn get-live-schedule-by-event-id [id]
+  (jdbc/query db-spec ["select *, event.title as eventtitle, activity.name as activityname from live_schedule left join event e on e.id = live_schedule.event_id left join activity a on a.id = live_schedule.activity_id where event_id = ?  order by timestamp DESC limit 10" id]))
 (defn get-activity-album-by-id [id]
   (jdbc/query db-spec ["select * from album_photo where activity_id = ? limit 8" id]))
 (defn get-activity-news-by-id [id]
   (jdbc/query db-spec ["select * from news where activity_id = ? limit 4" id]))
+(defn get-live-schedule-by-id [id]
+  (first (jdbc/query db-spec ["select * from live_schedule where id = ?" id])))
 (defn get-news-by-id [id]
   (first (jdbc/query db-spec ["select * from news where id = ?" id])))
 
