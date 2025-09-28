@@ -465,13 +465,16 @@
          (hf/label "album[subtitle]" "subtitle")    
          (hf/text-field "album[subtitle]")    
       ]
-  [:div
-  (hf/label "activity_id" "Activity")
-  (hf/select-options :activity_id
-    (for [{:keys [id name emoji]} (db/get-activities)]
-      [:option {:value id} (str emoji " " name)]))]
 
+
+[:div
+  (hf/label "album[activity_id]" "Activity")
+     [:select {:name (str "album[activity_id]")}
+    (for [{:keys [id name emoji]} (db/get-activities)]
+      [:option {:value (str id)} (str emoji " " name)]) ]]
          (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
+
+
                  )
 
 (defn form-news-edit
@@ -544,21 +547,26 @@
       ]
 [:div
   (hf/label "news[activity_id]" "Activity")
-  (hf/select-options "news[activity_id]"
+     [:select {:name (str "news[activity_id]")}
     (for [{:keys [id name emoji]} (db/get-activities)]
-      [:option {:value id} (str emoji " " name)]))]
+      [:option {:value (str id)} (str emoji " " name)]) ]]
 
          (hf/submit-button "Submit"))]) #"(<html>|<\/html>)" "")
                  )
 
 
 
+
 (defn poster-news [request]
   (println (str request))
   (println (:anti-forgery-token request))
+  (let [template (form-news-page request)
+final-page   (render-params-html "heyindex.html" {:title  "ajouter une news" :content template
+                       :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")})
+]
   (response/content-type
-    (response/response (render-html "index.html" "ajouter une news" (form-news-page request)))
-    "text/html"))
+    (response/response final-page)
+    "text/html")))
 
 
 
@@ -673,7 +681,7 @@
 
 (defn home [_]
   (let [template (slurp (io/resource "welcome.html"))
-        live-schedule (str/join "" (map #(str "<p>" % "</p>") (db/get-latest-live-schedule)))
+        live-schedule (render-collection-params-live-schedule "activities" (db/get-live-schedules) "_optionliveschedule.html")
         latest-news (str/join "" (map #(str (let [ago (time-ago (:timestamp %) "fr")]
             (str "<div class=\"news-block\"><a href=\"/voir_news/" (:id %) "\">"
                  "<p>" (:title %) "</p>"

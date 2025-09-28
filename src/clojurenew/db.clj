@@ -286,7 +286,7 @@
   (jdbc/insert! db-spec :athlete params))
 
 (defn get-athletes []
-  (jdbc/query db-spec ["select *, (select group_concat(distinct concat(activity.emoji, ' ', activity.name)) from activity left join live_schedule on live_schedule.activity_id = activity.id left join result on result.athlete_id = athlete.id ) as activities from athlete ORDER BY timestamp DESC"]))
+  (jdbc/query db-spec ["select *, (select group_concat(distinct activity.emoji ||  ' ' || activity.name) from activity left join live_schedule on live_schedule.activity_id = activity.id left join result on result.athlete_id = athlete.id ) as activities from athlete ORDER BY timestamp DESC"]))
 
 (defn get-athlete-by-id [id]
   (first (jdbc/query db-spec ["select * from athlete where id = ?" id])))
