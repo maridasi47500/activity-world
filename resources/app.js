@@ -13,6 +13,19 @@ function handleEventClick(id, title, mindate, maxdate) {
   mydate.max =`${max.getFullYear()}-${String(max.getMonth() + 1).padStart(2, '0')}-${String(max.getDate() + 1).padStart(2, '0')}`;
 }
 }
+if (document.getElementById("chercherresults")) {
+$("#selectevent").change(function(){
+$("#selectliveschedule option.optionliveschedule").removeClass("showme");
+$("#selectliveschedule option.optionliveschedule[data-id="+String(selectevent.value)+"]").addClass("showme");
+
+});
+function chercherResultats(eventid, scheduleid) {
+   if (eventid !== "" && scheduleid !== "") {
+      window.location = "/results?live_schedule_id="+String(scheduleid)
+   }
+  return false;
+}
+}
 if (document.getElementById("myModalSchedule")) {
 const myModal = new bootstrap.Modal('#myModalSchedule', {
   keyboard: false

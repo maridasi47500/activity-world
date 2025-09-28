@@ -88,7 +88,7 @@
 
   ;; News: routes preserved as in original code
 
-  (GET "/results" [] h/results)
+  (GET "/results" req h/results)
 
   ;;competitions
   (GET "/competitions" [] h/competitions)

@@ -123,7 +123,6 @@
 (defn replace-params-template
   "Replace all placeholders in the string using a map of replacements."
   [s replacements]
-  (println replacements)
   (reduce (fn [acc [match replacement]]
             (if (and match replacement)
               (clojure.string/replace acc (re-pattern (java.util.regex.Pattern/quote match)) replacement)
@@ -239,29 +238,10 @@
   (let [body (if (seq coll)
                (str/join "" (map #(replace-several (slurp (io/resource template))
                  "$image" (str (:image %))
-                 "$activities" (str (:activities %))
                  "$country_id" (str (:country_id %))
                  "$birthdate" (str (:birthdate %))
                  "$name" (str (:name %))
                  "$id" (str (:id %))
-) coll))
-               "<p>Il n'y a rien à afficher. </p>")
-        page (slurp (io/resource "index.html"))]
-    (println "body:" body)
-    body))
-(defn render-collection-params-results
-  "Render a collection of news into a template with name of params in view."
-  [title coll template]
-  (println "coll:" coll)
-  (println "title:" title)
-  (println "template:" template)
-  (let [body (if (seq coll)
-               (str/join "" (map #(replace-several (slurp (io/resource template))
-                 "$mytime" (str (:mytime %))
-                 "$live_schedule_id" (str (:live_schedule_id %))
-                 "$athleteimage" (str (:athleteimage %))
-                 "$athlete_name" (str (:athletename %))
-                 "$athlete_id" (str (:athlete_id %))
 ) coll))
                "<p>Il n'y a rien à afficher. </p>")
         page (slurp (io/resource "index.html"))]
@@ -582,32 +562,16 @@
     (response/content-type
       (response/response final-page)
       "text/html")))
-
 (defn results [params]
   (println "request results : ", (:params params))
-  (println "request results : ", (get (:params params) "result_id"))
-  (if (get (:params params) "live_schedule_id")
+  (println "request results : ", (:result_id (:params params)))
   (let [reqres (:params params)
-        result_id (get reqres "result_id")
-        live_schedule_id (get reqres "live_schedule_id")
-        live_schedule (db/get-live-schedule-by-id live_schedule_id)
-        event (db/get-event-by-id (:event_id live_schedule))
-        activity (db/get-activity-by-id (:activity_id live_schedule))
-        results (db/get-results-by-live-schedule-id live_schedule_id)
+        result_id (:result_id reqres)
         template (slurp (io/resource "results.html"))
         filled-template (replace-template template
                          {
-                          "$eventtitle" (:title event)
-                          "$activityname" (:name activity)
-                          "$date_debut" (:date_debut event)
-                          "$date_fin" (:date_fin event)
-                          "$mytitle" (:title live_schedule)
-                          "$mytime" (:mytime live_schedule)
-                          "$mydate" (:mydate live_schedule)
-                          "$allevents" (render-collection-params-events "results" (db/get-events) "_optionevent.html")
-                          "$allschedules" (render-collection-params-live-schedule "activities" (db/get-live-schedules) "_optionliveschedule.html")
-                          "$allresults" (render-collection-params-results "results" results "_listresult.html")
-                          "$allathletes" (render-collection-params-athletes "activities" (db/get-athletes) "_optionathlete.html")})
+                          "$allathletes" (render-collection-params-athletes "activities" (db/get-athletes) "_optionathlete.html")
+                          "$allactivities" (render-collection-params-activities "activities" (db/get-activities) "_optionactivity.html")})
         final-page (render-params-html "heyindex.html"
                       {:title "bienvenue"
                        :content filled-template
@@ -616,23 +580,7 @@
                        )]
     (response/content-type
       (response/response final-page)
-      "text/html"))
-  (let [template (slurp (io/resource "myresults.html"))
-        filled-template (replace-template template
-                         {
-                          "$allevents" (render-collection-params-events "results" (db/get-events) "_optionevent.html")
-                          "$allschedules" (render-collection-params-live-schedule "activities" (db/get-live-schedules) "_optionliveschedule.html")})
-        final-page (render-params-html "heyindex.html"
-                      {:title "bienvenue"
-                       :content filled-template
-                       :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html")}
-                       )]
-    (response/content-type
-      (response/response final-page)
-      "text/html"))
-)
-      )
-
+      "text/html")))
 (defn competitions [_]
   (let [template (slurp (io/resource "competitions.html"))
         activities (db/get-activities)

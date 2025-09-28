@@ -3,6 +3,12 @@ h2 a::before {
 	transform: rotate(0deg) translate(-20px, 0);
 	display: inline-block;
 }
+#selectliveschedule option.optionliveschedule {
+display:none;
+}
+#selectliveschedule option.optionliveschedule.showme {
+display:block;
+}
 h2 {
 	transform: translate(-30px, 0);
 	padding: 0px 40px 0px 0px;

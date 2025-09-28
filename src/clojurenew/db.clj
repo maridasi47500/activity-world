@@ -145,6 +145,8 @@
 (defn get-news []
   (jdbc/query db-spec ["select * from news ORDER BY timestamp DESC"]))
 
+(defn get-live-schedules []
+  (jdbc/query db-spec ["select *, e.title as eventtitle, a.name as activityname from live_schedule left join event e on e.id = live_schedule.event_id left join activity a on a.id = live_schedule.activity_id  order by live_schedule.timestamp DESC limit 10"]))
 (defn get-live-schedule-by-event-id [id]
   (jdbc/query db-spec ["select *, e.title as eventtitle, a.name as activityname from live_schedule left join event e on e.id = live_schedule.event_id left join activity a on a.id = live_schedule.activity_id where live_schedule.event_id = ?  order by live_schedule.timestamp DESC limit 10" id]))
 (defn get-activity-album-by-id [id]
@@ -271,6 +273,8 @@
 
 (defn get-results []
   (jdbc/query db-spec ["select * from result ORDER BY timestamp DESC"]))
+(defn get-results-by-live-schedule-id [id]
+  (jdbc/query db-spec ["select *, athlete.image as athleteimage, athlete.name as athletename from result left join athlete on athlete.id = result.athlete_id where live_schedule_id = ? ORDER BY timestamp DESC" id]))
 
 (defn get-result-by-id [id]
   (first (jdbc/query db-spec ["select * from result where id = ?" id])))
@@ -282,7 +286,7 @@
   (jdbc/insert! db-spec :athlete params))
 
 (defn get-athletes []
-  (jdbc/query db-spec ["select * from athlete ORDER BY timestamp DESC"]))
+  (jdbc/query db-spec ["select *, (select group_concat(distinct concat(activity.emoji, ' ', activity.name)) from activity left join live_schedule on live_schedule.activity_id = activity.id left join result on result.athlete_id = athlete.id ) as activities from athlete ORDER BY timestamp DESC"]))
 
 (defn get-athlete-by-id [id]
   (first (jdbc/query db-spec ["select * from athlete where id = ?" id])))
