@@ -130,12 +130,42 @@
               acc))
           s
           replacements))
+(defn replace-several [s & {:as replacements}]
+  (reduce (fn [s [match replacement]]
+            (if (and match replacement)
+              (clojure.string/replace s match replacement)
+              s)) ; skip if either is nil
+          s replacements))
+(defn render-collection-params-activities
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several (slurp (io/resource template))
+                 "$emoji" (str (:emoji %))
+                 "$name" (str (:name %))
+                 "$id" (str (:id %))
+) coll))
+               "<p>Il n'y a rien à afficher. </p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
+    body))
 
+(defn activitiesparams [params]
+  (if (nil? (get params :activities))
+  (assoc params :activities (render-collection-params-activities "activities" (db/get-activities) "_activitymenu.html"))
+  (assoc params :activities (get params :activities)))
+)
 (defn render-params-html
   "Render an HTML template from resources, replacing all {{key}} placeholders using a map."
   [template params]
-  (let [tpl (slurp (io/resource template))
-        replacements (map (fn [[k v]] [(str "{{" (name k) "}}") v]) params)]
+
+  (println params)
+  (let [myparams (activitiesparams params)
+        tpl (slurp (io/resource template))
+        replacements (map (fn [[k v]] [(str "{{" (name k) "}}") v]) myparams)]
     (replace-params-template tpl replacements)))
 
 
@@ -174,12 +204,7 @@
 ;  (reduce (fn [s [match replacement]]
 ;            (clojure.string/replace s match replacement))
 ;          s replacements))
-(defn replace-several [s & {:as replacements}]
-  (reduce (fn [s [match replacement]]
-            (if (and match replacement)
-              (clojure.string/replace s match replacement)
-              s)) ; skip if either is nil
-          s replacements))
+
 
 (defn render-collection-params-live-schedule
   "Render a collection of news into a template with name of params in view."
@@ -267,22 +292,6 @@
         page (slurp (io/resource "index.html"))]
     (println "body:" body)
     body))
-(defn render-collection-params-activities
-  "Render a collection of news into a template with name of params in view."
-  [title coll template]
-  (println "coll:" coll)
-  (println "title:" title)
-  (println "template:" template)
-  (let [body (if (seq coll)
-               (str/join "" (map #(replace-several (slurp (io/resource template))
-                 "$emoji" (str (:emoji %))
-                 "$name" (str (:name %))
-                 "$id" (str (:id %))
-) coll))
-               "<p>Il n'y a rien à afficher. </p>")
-        page (slurp (io/resource "index.html"))]
-    (println "body:" body)
-    body))
 
 (defn render-collection-params-albums
   "Render a collection of news into a template with name of params in view."
@@ -334,6 +343,23 @@
         page (slurp (io/resource "index.html"))]
     (println "body:" body)
     ;(format page title body)
+    body))
+(defn render-collection-params-news
+  "Render a collection of news into a template with name of params in view."
+  [title coll template]
+  (println "coll:" coll)
+  (println "title:" title)
+  (println "template:" template)
+  (let [body (if (seq coll)
+               (str/join "" (map #(replace-several template
+               "$token" (anti-forgery-field)
+                 "$id" (str (:id %))
+                 "$title" (:title %)
+                 "$image" (:image %)
+                 "$content" (:content %)) coll))
+               "<p>Il n'y a rien à afficher.</p>")
+        page (slurp (io/resource "index.html"))]
+    (println "body:" body)
     body))
 (defn render-collection-params
   "Render a collection of news into a template with name of params in view."
@@ -572,7 +598,7 @@ final-page   (render-params-html "heyindex.html" {:title  "ajouter une news" :co
 
 
 (defn mes-mots [template debut-mot-string fin-mot-html]
-    (render-html (str template) (str debut-mot-string) (str (my-html fin-mot-html))))
+    (render-params-html (str template) {:title (str debut-mot-string) :content (str (my-html fin-mot-html))}))
 
 
 (defn athletes [_]
@@ -1047,10 +1073,7 @@ final-page   (render-params-html "heyindex.html" {:title  "ajouter une news" :co
   (println "voir news handler reached")
   (response/content-type
     (response/response
-      (render-collection-params
-        "voir les news"
-        (db/get-news)
-        (slurp (io/resource "_news.html"))))
+      (render-params-html "heyindex.html" {:title "voir les news" :content (render-collection-params-news "voir les news" (db/get-news) (slurp (io/resource "_news.html")))}))
     "text/html"))
 
 
@@ -1128,18 +1151,19 @@ final-page   (render-params-html "heyindex.html" {:title  "ajouter une news" :co
 
 (defn voir-video-id [req]
   (let [id (get-in req [:params :id])
+        template (slurp (io/resource "heyindex.html"))
         hey (slurp (io/resource "voirvideo.html"))
         news (db/get-video-by-id id)]
     (if news
       (response/content-type
         (response/response 
-          (render-html "index.html" 
-                       "voir la video" 
-                       (replace-several-one-template hey
+          (render-params-html "heyindex.html" 
+                       {:title "voir la video" 
+                       :content (replace-several-one-template hey
                          {"$myvideo" (str (:myvideo news))
                           "$video_id" (str (:id news))
                           "$title" (:title news)
-                          "$content" (:content news)})))
+                          "$content" (:content news)}) }))
         "text/html")
       (response/not-found "album not found"))))
 
@@ -1149,12 +1173,12 @@ final-page   (render-params-html "heyindex.html" {:title  "ajouter une news" :co
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news" :content (replace-several-one-template hey 
                  {
 "$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+) }))
         "text/html")
       (response/not-found "album not found"))))
 (defn voir-activity-calendars-id [req]
@@ -1163,12 +1187,14 @@ news (db/get-activity-by-id id)]
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" { :title "voir la news" 
+
+:content (replace-several-one-template hey 
                  {
 "$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 (defn voir-activity-results-id [req]
@@ -1177,12 +1203,13 @@ news (db/get-activity-by-id id)]
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news" 
+:content (replace-several-one-template hey 
                  {
 "$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 (defn voir-activity-athletes-id [req]
@@ -1191,12 +1218,13 @@ news (db/get-activity-by-id id)]
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news" 
+:content (replace-several-one-template hey 
                  {
 "$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 (defn voir-activity-rankings-id [req]
@@ -1205,12 +1233,13 @@ news (db/get-activity-by-id id)]
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news" 
+:content (replace-several-one-template hey 
                  {
 "$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 (defn voir-activity-records-id [req]
@@ -1219,12 +1248,13 @@ news (db/get-activity-by-id id)]
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news"
+:content (replace-several-one-template hey 
                  {
                  "$id" (str id)
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+) }))
         "text/html")
       (response/not-found "album not found"))))
 (defn voir-activity-rules-id [req]
@@ -1233,12 +1263,13 @@ news (db/get-activity-by-id id)]
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news"
+:content (replace-several-one-template hey 
                  {
 "$id" id
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 (defn voir-activity-points-id [req]
@@ -1247,12 +1278,13 @@ news (db/get-activity-by-id id)]
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news"
+:content (replace-several-one-template hey 
                  {
                  "$id" (str id)
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 
@@ -1262,7 +1294,8 @@ news (db/get-activity-by-id id)]
 news (db/get-event-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news"
+:content (replace-several-one-template hey 
                  {
 "$id" id
                  "$datedebut" (str (:date_debut news))
@@ -1274,7 +1307,7 @@ news (db/get-event-by-id id)]
         "_voirschedule.html")
 "$title" (str (:title news))
                  "$event_id" (str (:id news))}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 
@@ -1284,7 +1317,8 @@ news (db/get-event-by-id id)]
 news (db/get-activity-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news"
+:content (replace-several-one-template hey 
                  {
 "$id" id
 "$worldrecord" (render-collection-params-video
@@ -1310,7 +1344,7 @@ news (db/get-activity-by-id id)]
 "$name" (str (:name news))
                  "$activity_id" (str (:id news))
                  "$emoji" (:emoji news)}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 (defn voir-news-id [req]
@@ -1319,12 +1353,13 @@ news (db/get-activity-by-id id)]
 news (db/get-news-by-id id)]
 (if news
 (response/content-type
-(response/response (render-html "index.html" "voir la news" (replace-several-one-template hey 
+(response/response (render-params-html "heyindex.html" {:title "voir la news"
+:content (replace-several-one-template hey 
                  {"$image" (str (:image news))
                  "$title" (:title news)
                  "$news_id" (str (:id news))
                  "$content" (:content news)}
-) ))
+)} ))
         "text/html")
       (response/not-found "album not found"))))
 (defn form-video-edit
@@ -1370,9 +1405,9 @@ news (db/get-news-by-id id)]
     (if news
       (response/content-type
         (response/response 
-          (render-html "index.html" 
-                       "voir la video" 
-                       (form-video-edit (:title news) (:content news) (:myvideo news) (:id news))))
+          (render-params-html "heyindex.html" 
+                       {:title "voir la video" 
+                       :content (form-video-edit (:title news) (:content news) (:myvideo news) (:id news))}))
         "text/html")
       (response/not-found "album not found"))))
 (defn edit-album-id [req]
@@ -1381,9 +1416,9 @@ news (db/get-news-by-id id)]
     (if news
       (response/content-type
         (response/response 
-          (render-html "index.html" 
-                       "edit la album" 
-                       (form-album-edit (:title news) (:subtitle news) (:id news))))
+          (render-params-html "heyindex.html" 
+                       {:title "edit la album" 
+                       :content (form-album-edit (:title news) (:subtitle news) (:id news))}))
         "text/html")
       (response/not-found "album not found"))))
 (defn edit-news-id [req]
@@ -1392,9 +1427,9 @@ news (db/get-news-by-id id)]
     (if news
       (response/content-type
         (response/response 
-          (render-html "index.html" 
-                       "edit la news" 
-                        (form-news-edit (:title news) (:image news) (:content news) (:id news))
+          (render-params-html "heyindex.html" 
+                       {:title "edit la news" 
+                        :content (form-news-edit (:title news) (:image news) (:content news) (:id news))}
 ))
         "text/html")
       (response/not-found "album not found"))))
@@ -1483,15 +1518,15 @@ news (db/get-news-by-id id)]
 (defn voir-albums [req]
   (response/content-type
     (response/response
-      (render-html "index.html" "voir albums" (render-collection-params-albums
+      (render-params-html "heyindex.html" {:title "voir albums" :content (render-collection-params-albums
         "Albums"
         (db/get-albums)
-        (slurp (io/resource "_album.html")))))
+        (slurp (io/resource "_album.html")))}))
     "text/html"))
 
 (defn poster-album [req]
   (response/content-type
-    (response/response (render-html "index.html" "ajouter un album" (form-album-page req)))
+    (response/response (render-params-html "heyindex.html" {:title "ajouter un album" :content (form-album-page req)}))
     "text/html"))
 
 (defn action-create-album [request]
@@ -1597,10 +1632,11 @@ news (db/get-news-by-id id)]
 (defn voir-videos [req]
   (response/content-type
     (response/response
-      (render-html "index.html" "voir videos" (render-collection-params-video
+      (render-params-html "heyindex.html" {:title "voir videos"
+:content (render-collection-params-video
         "Vidéos"
         (db/get-videos)
-        (slurp (io/resource "_video.html")))))
+        (slurp (io/resource "_video.html")))} ))
     "text/html"))
 
 
@@ -1694,7 +1730,7 @@ news (db/get-news-by-id id)]
 
 (defn poster-video [req]
 (response/content-type
-(response/response (render-html "index.html" "ajouter une vidéo" (form-video-page req)))
+(response/response (render-params-html "heyindex.html" {:title "ajouter une vidéo" :content (form-video-page req)}))
 "text/html"))
 
 (defn poster-photo [req album_id]
@@ -1702,11 +1738,11 @@ news (db/get-news-by-id id)]
         photos (db/get-photos-by-album album_id)]
 
 (response/content-type
-(response/response (render-html "index.html" "ajouter une photo a un album" (form-photo-page req album_id (str (:title album) (:subtitle album)))))
+(response/response (render-params-html "heyindex.html" {:title "ajouter une photo a un album" :content (form-photo-page req album_id (str (:title album) (:subtitle album)))}))
 "text/html")))
 
 
 (defn not-found-handler [_]
-  (-> (response/response (str (render-html "404.html" "hey" "hi") _))
+  (-> (response/response (str (render-params-html "404.html" {:title "hey il y a une erreur" :content "hi tu as une erreur dans ton programme"}) _))
       (response/status 404)
       (response/content-type "text/html")))
