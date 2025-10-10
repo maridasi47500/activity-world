@@ -17,3 +17,7 @@ lein search lein-ring
 ```
 - dans modele_bain clj et route news , tu as un modele pour "news" ou "bain", tu peux modifier comme un scaffold pour avir la base de données et plusieurs formulaires poiur une autre table
 - tu fais sh heytoken.sh , ca dure une heure, (j'ai choisi "secretkey" comme passe qui marche ) tu choisis le passe que tu veux et tumodifies dans src clojurenew core!
+ ![alt text](activity1.png) 
+ ![alt text](activity2.png) 
+ ![alt text](activity4.png) 
+ ![alt text](activity3.png) 
